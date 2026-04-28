@@ -1,0 +1,72 @@
+{
+  "enabledPlugins": {
+    "firm@firm": true
+  },
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p sg-firm/sessions && { NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ); printf '## Pre-Compact Snapshot\\n**Time**: %s\\n\\n### Recent Commits\\n' \"$NOW\"; git log --oneline -5 2>/dev/null || echo '(no git)'; printf '\\n### Working Tree\\n'; git status --short 2>/dev/null || echo '(no git)'; printf '\\n### Open Questions\\n(fill in before context is lost)\\n\\n### Working Theories\\n(fill in before context is lost)\\n\\n### Key Decisions\\n(fill in before context is lost)\\n'; } > sg-firm/sessions/pre-compact.md 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat /dev/stdin | python3 -c \"import sys,re,json; d=json.load(sys.stdin); c=d.get('content','') or d.get('new_string','') or ''; pats=[r'ignore\\\\s+(all\\\\s+)?previous\\\\s+instructions',r'disregard.*instructions',r'you\\\\s+are\\\\s+now',r'system\\\\s+prompt',r'^IMPORTANT:',r'[\\\\u200b\\\\u200c\\\\u200d\\\\u200e\\\\u200f\\\\u202a-\\\\u202e\\\\u2066-\\\\u2069]']; hits=[p for p in pats if re.search(p,c,re.I|re.M)]; sys.exit(0) if not hits else [print('WARNING: Possible prompt injection detected in file content: '+str(hits),file=sys.stderr), sys.exit(0)]\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'REVIEW GATE: Agent completed. Verify deliverable quality before proceeding:' >&2; echo '  [ ] Findings tagged with confidence: CONFIRMED | LIKELY | POSSIBLE' >&2; echo '  [ ] Evidence includes file paths and line numbers' >&2; echo '  [ ] Gaps captured as new tasks | Downstream connections identified' >&2; mkdir -p sg-firm/cost && cat /dev/stdin | python3 -c \"import sys,re,json,datetime; d=json.load(sys.stdin); inp=json.dumps(d.get('tool_input',{})); ts=datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'); a=re.search(r'agent[=:\\\\s]+([\\\\w-]+)',inp); s=re.search(r'sprint[=:\\\\s]+([\\\\w-]+)',inp); m=''; m+=f' [agent={a.group(1)}]' if a else ''; m+=f' [sprint={s.group(1)}]' if s else ''; open('sg-firm/cost/task-log.txt','a').write(f'{ts} task-completed{m}\\n')\" 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CTX=$(ls /tmp/claude-ctx-*.json 2>/dev/null | head -1); if [ -n \"$CTX\" ]; then PCT=$(python3 -c \"import json; d=json.load(open('$CTX')); print(d.get('remaining_percentage',100))\" 2>/dev/null); if [ -n \"$PCT\" ]; then if [ \"$PCT\" -le 25 ] 2>/dev/null && [ ! -f .claude/.ctx-warned-critical ]; then echo 'CRITICAL: Context budget at '\"$PCT\"'%% remaining. Consider /handoff or completing current task.' >&2; touch .claude/.ctx-warned-critical; elif [ \"$PCT\" -le 35 ] 2>/dev/null && [ ! -f .claude/.ctx-warned-warning ]; then echo 'WARNING: Context budget at '\"$PCT\"'%% remaining. Wrap up current work stream.' >&2; touch .claude/.ctx-warned-warning; fi; fi; fi; true"
+          },
+          {
+            "type": "command",
+            "command": "mkdir -p sg-firm && cat /dev/stdin | python3 -c \"import json,sys,os; d=json.load(sys.stdin); tool=d.get('tool_name','unknown'); inp=d.get('tool_input',{}) or {}; out=d.get('tool_output','') or ''; fp=inp.get('file_path') or inp.get('path') or inp.get('notebook_path') or None; outcome='failure' if (out and 'error' in out.lower()[:80]) else 'success'; line=json.dumps({'timestamp':__import__('datetime').datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'tool':tool,'file_path':fp,'outcome':outcome}); open('sg-firm/observations.jsonl','a').write(line+'\\n')\" 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "mkdir -p sg-firm && cat /dev/stdin | python3 -c \"import re,json,sys,datetime; d=json.load(sys.stdin); tool=d.get('tool_name','unknown'); out=d.get('tool_output','') or ''; pats=['429','rate.limit','too.many.requests','overloaded','capacity']; found=[p for p in pats if re.search(p,out,re.I)]; [print('WARNING: Rate limit detected (pattern: '+found[0]+') -- dispatch may stall. Check API quota.',file=sys.stderr), open('sg-firm/observations.jsonl','a').write(json.dumps({'timestamp':datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),'type':'rate-limit-detected','tool':tool,'matched_pattern':found[0]})+'\n')] if found else None\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p sg-firm/sessions && NOW=$(date -u '+%Y-%m-%dT%H-%M-%SZ') && FILE=\"sg-firm/sessions/${NOW}.md\" && echo \"## Session: $NOW\" > \"$FILE\" && echo '' >> \"$FILE\" && echo '### Commits' >> \"$FILE\" && if git rev-parse --git-dir >/dev/null 2>&1; then COMMITS=$(git log --oneline -10 2>/dev/null); else COMMITS=''; fi; if [ -n \"$COMMITS\" ]; then echo \"$COMMITS\" >> \"$FILE\"; else echo '(none)' >> \"$FILE\"; fi && echo '' >> \"$FILE\" && echo '### Working Tree' >> \"$FILE\" && if git rev-parse --git-dir >/dev/null 2>&1; then TREE=$(git status --short 2>/dev/null); else TREE=''; fi; if [ -n \"$TREE\" ]; then echo \"$TREE\" >> \"$FILE\"; else echo 'clean' >> \"$FILE\"; fi && cp \"$FILE\" sg-firm/sessions/last.md 2>/dev/null || true && ls -t sg-firm/sessions/[0-9]*.md 2>/dev/null | tail -n +4 | xargs rm -f 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "[ -z \"$FIRM_NOTIFY_WEBHOOK\" ] && exit 0; if git rev-parse --git-dir >/dev/null 2>&1; then BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown); OUTCOME=$(git status --short 2>/dev/null | grep -q . && echo dirty || echo clean); COMMITS=$(git log --oneline --since='8 hours ago' 2>/dev/null | wc -l | tr -d ' '); else BRANCH=\"not a git repo\"; OUTCOME=\"unknown\"; COMMITS=0; fi; OLDEST=$(ls -t sg-firm/sessions/[0-9]*.md 2>/dev/null | tail -1); if [ -n \"$OLDEST\" ]; then START=$(stat -c %Y \"$OLDEST\" 2>/dev/null || stat -f %m \"$OLDEST\" 2>/dev/null || echo 0); NOW_S=$(date +%s); DURATION=$(( (NOW_S - START) / 60 )); else DURATION=0; fi; TS=$(date -u +%Y-%m-%dT%H:%M:%SZ); export BRANCH OUTCOME COMMITS DURATION TS; python3 -c \"import json,os; print(json.dumps({'event':'session-complete','branch':os.environ.get('BRANCH','unknown'),'duration_minutes':int(os.environ.get('DURATION','0')),'outcome':os.environ.get('OUTCOME','unknown'),'commits':int(os.environ.get('COMMITS','0')),'timestamp':os.environ.get('TS','')}))\" | curl -s --max-time 5 -X POST -H 'Content-Type: application/json' -d @- \"$FIRM_NOTIFY_WEBHOOK\" || true"
+          }
+        ]
+      }
+    ]
+  }
+}

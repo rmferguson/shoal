@@ -1,0 +1,32 @@
+team: moth
+description: "Hosted Jira MCP server — correct, complete, multi-client. Quality alternative to Atlassian's broken official server."
+
+defaults:
+  model: sonnet
+  budget: 0.50
+  permission-mode: dontAsk
+
+members:
+  - name: implementer
+    role: "Jira tool implementations — all MCP tools, Jira API client, ADF handling"
+    owns:
+      - "src/tools/**"
+      - "src/jira/**"
+      - "src/server.ts"
+
+  - name: platform
+    role: "Auth, MCP transport, HTTP routing, config, error handling"
+    owns:
+      - "src/auth/**"
+      - "src/http.ts"
+      - "src/config.ts"
+
+  - name: infra
+    role: "Hosting, token persistence, billing, marketplace plugin configs"
+    owns:
+      - "Dockerfile"
+      - "*.yml"
+      - "deploy/**"
+      - ".claude-plugin/**"
+      - ".cursor-plugin/**"
+      - "gemini-extension.json"
