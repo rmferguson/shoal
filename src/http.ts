@@ -31,5 +31,5 @@ app.get("/health", (_req, res) => {
 });
 
 app.listen(config.port, () => {
-  console.log(`moth listening on ${config.publicUrl}`);
+  console.log(`shoal listening on ${config.publicUrl}`);
 });

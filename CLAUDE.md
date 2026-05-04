@@ -1,8 +1,8 @@
-# Moth — Jira MCP Server
+# Shoal — Jira MCP Server
 
-Moth is a hosted MCP server for Jira. It is positioned as the quality alternative to Atlassian's official server (`mcp.atlassian.com`), which has unfixed correctness bugs and auth fragility across AI clients.
+Shoal is a hosted MCP server for Jira. It is positioned as the quality alternative to Atlassian's official server (`mcp.atlassian.com`), which has unfixed correctness bugs and auth fragility across AI clients.
 
-**Full spec:** `moth-jira-spec.md`
+**Full spec:** `shoal-jira-spec.md`
 
 ---
 
@@ -78,7 +78,7 @@ src/
 |----------|----------|-------------|
 | `ATLASSIAN_CLIENT_ID` | Yes (OAuth) | OAuth app client ID from developer.atlassian.com |
 | `ATLASSIAN_CLIENT_SECRET` | Yes (OAuth) | OAuth app client secret |
-| `PUBLIC_URL` | Yes (prod) | Public base URL, e.g. `https://moth.yourdomain.com` |
+| `PUBLIC_URL` | Yes (prod) | Public base URL, e.g. `https://shoal.yourdomain.com` |
 | `PORT` | No | HTTP port (default: 3000) |
 
 For local dev without OAuth, the headless API token fallback (not yet implemented) will use `ATLASSIAN_USER_EMAIL` and `ATLASSIAN_API_TOKEN`.
@@ -114,9 +114,9 @@ Do not use TodoWrite, TaskCreate, or markdown TODO lists. Use `bd` only.
 
 ## Known bugs in the Atlassian server (our differentiation)
 
-These are fixed in moth or are on the backlog. Do not reintroduce them:
+These are fixed in Shoal or are on the backlog. Do not reintroduce them:
 
-| Issue | Description | Status in moth |
+| Issue | Description | Status in Shoal |
 |-------|-------------|----------------|
 | #132 | createJiraIssue double-creates every ticket | Fixed |
 | #119 | Custom fields silently absent from responses | Fixed |

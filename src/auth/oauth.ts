@@ -2,6 +2,10 @@ import { Router } from "express";
 import { config } from "../config.js";
 import { saveTokens } from "./tokens.js";
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 // Temporary state store for CSRF protection (sessionId -> state nonce).
 const pendingStates = new Map<string, string>();
 
@@ -40,7 +44,14 @@ oauthRouter.get("/callback", async (req, res) => {
   const error = req.query["error"];
 
   if (error) {
-    res.status(400).send(`OAuth error: ${error} — ${req.query["error_description"] ?? ""}`);
+    const reason = (req.query["error_description"] as string | undefined) ?? (error as string);
+    res.status(400).send(`<!DOCTYPE html>
+<html><head><title>Authorization Failed</title></head>
+<body>
+<h2>Authorization failed</h2>
+<p>Reason: ${escapeHtml(reason)}</p>
+<p>Please close this tab and try connecting again.</p>
+</body></html>`);
     return;
   }
 
@@ -113,7 +124,7 @@ oauthRouter.get("/callback", async (req, res) => {
     // Use first accessible site (user can override via config later).
     const site = resources[0]!;
 
-    saveTokens(sessionId, {
+    await saveTokens(sessionId, {
       accessToken: tokenData.access_token,
       refreshToken: tokenData.refresh_token,
       expiresAt: Date.now() + tokenData.expires_in * 1000,

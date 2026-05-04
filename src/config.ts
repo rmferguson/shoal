@@ -28,4 +28,9 @@ export const config = {
     apiBase: "https://api.atlassian.com",
     requestTimeoutMs: 10_000,
   },
+
+  tokenStore: (process.env.TOKEN_STORE ?? "memory") as "memory" | "redis",
+  redis: {
+    url: process.env.REDIS_URL ?? "redis://localhost:6379",
+  },
 } as const;
