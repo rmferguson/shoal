@@ -2,7 +2,6 @@ import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 
 export const GetCommentsInput = z.object({
-  sessionId: z.string().describe("Session ID from OAuth flow"),
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
   startAt: z.number().optional().default(0).describe("Offset for pagination (default: 0)"),
   maxResults: z
@@ -43,10 +42,8 @@ function renderAdf(adf: unknown): string {
 }
 
 export async function getJiraIssueComments(input: GetCommentsInput): Promise<unknown> {
-  const { sessionId, issueKey, startAt, maxResults } = input;
-  const client = new JiraClient(sessionId);
-
-  // Clamp maxResults to 100 per Jira API limits
+  const { issueKey, startAt, maxResults } = input;
+  const client = new JiraClient();
   const clampedMax = Math.min(maxResults, 100);
 
   try {
@@ -55,8 +52,7 @@ export async function getJiraIssueComments(input: GetCommentsInput): Promise<unk
     );
 
     const returned = data.comments.length;
-    const nextStartAt =
-      startAt + returned < data.total ? startAt + returned : null;
+    const nextStartAt = startAt + returned < data.total ? startAt + returned : null;
 
     return {
       total: data.total,
@@ -66,10 +62,7 @@ export async function getJiraIssueComments(input: GetCommentsInput): Promise<unk
       nextStartAt,
       comments: data.comments.map((c) => ({
         id: c.id,
-        author: {
-          displayName: c.author.displayName,
-          accountId: c.author.accountId,
-        },
+        author: { displayName: c.author.displayName, accountId: c.author.accountId },
         created: c.created,
         updated: c.updated,
         body: renderAdf(c.body),

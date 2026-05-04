@@ -2,7 +2,6 @@ import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 
 export const UpdateIssueInput = z.object({
-  sessionId: z.string().describe("Session ID from OAuth flow"),
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
   summary: z.string().optional().describe("New summary/title for the issue"),
   description: z
@@ -22,9 +21,7 @@ export const UpdateIssueInput = z.object({
   customFields: z
     .record(z.unknown())
     .optional()
-    .describe(
-      "Additional custom fields to set, e.g. { customfield_10016: 5 } for story points"
-    ),
+    .describe("Additional custom fields to set, e.g. { customfield_10016: 5 } for story points"),
 });
 
 export type UpdateIssueInput = z.infer<typeof UpdateIssueInput>;
@@ -33,69 +30,30 @@ function wrapInAdf(text: string): unknown {
   return {
     type: "doc",
     version: 1,
-    content: [
-      {
-        type: "paragraph",
-        content: [{ type: "text", text }],
-      },
-    ],
+    content: [{ type: "paragraph", content: [{ type: "text", text }] }],
   };
 }
 
 export async function updateJiraIssue(input: UpdateIssueInput): Promise<unknown> {
-  const {
-    sessionId,
-    issueKey,
-    summary,
-    description,
-    priority,
-    assigneeAccountId,
-    labels,
-    components,
-    customFields,
-  } = input;
+  const { issueKey, summary, description, priority, assigneeAccountId, labels, components, customFields } = input;
 
   const fields: Record<string, unknown> = {};
 
-  if (summary !== undefined) {
-    fields["summary"] = summary;
-  }
-
-  if (description !== undefined) {
-    fields["description"] = wrapInAdf(description);
-  }
-
-  if (priority !== undefined) {
-    fields["priority"] = { name: priority };
-  }
-
+  if (summary !== undefined) fields["summary"] = summary;
+  if (description !== undefined) fields["description"] = wrapInAdf(description);
+  if (priority !== undefined) fields["priority"] = { name: priority };
   if (assigneeAccountId !== undefined) {
-    // Empty string means unassign; null is what Jira expects for unassign
     fields["assignee"] = assigneeAccountId === "" ? null : { accountId: assigneeAccountId };
   }
-
-  if (labels !== undefined) {
-    fields["labels"] = labels;
-  }
-
-  if (components !== undefined) {
-    fields["components"] = components.map((name) => ({ name }));
-  }
-
-  if (customFields !== undefined) {
-    for (const [key, value] of Object.entries(customFields)) {
-      fields[key] = value;
-    }
-  }
-
-  const client = new JiraClient(sessionId);
+  if (labels !== undefined) fields["labels"] = labels;
+  if (components !== undefined) fields["components"] = components.map((name) => ({ name }));
+  if (customFields !== undefined) Object.assign(fields, customFields);
 
   try {
-    await client.put<void>(
+    await new JiraClient().put<void>(
       `/issue/${encodeURIComponent(issueKey.trim())}`,
       { fields }
     );
-
     return { success: true, issueKey: issueKey.trim() };
   } catch (err) {
     if (err instanceof JiraError) {

@@ -2,7 +2,6 @@ import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 
 export const TransitionIssueInput = z.object({
-  sessionId: z.string().describe("Session ID from OAuth flow"),
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
   transitionId: z.string().describe("Transition ID from getJiraTransitions"),
   clearResolution: z
@@ -18,23 +17,17 @@ export const TransitionIssueInput = z.object({
 export type TransitionIssueInput = z.infer<typeof TransitionIssueInput>;
 
 export async function transitionJiraIssue(input: TransitionIssueInput): Promise<unknown> {
-  const { sessionId, issueKey, transitionId, clearResolution } = input;
-  const client = new JiraClient(sessionId);
+  const { issueKey, transitionId, clearResolution } = input;
+  const client = new JiraClient();
 
-  const body: Record<string, unknown> = {
-    transition: { id: transitionId },
-  };
-
-  if (clearResolution) {
-    body["update"] = { resolution: [{ set: null }] };
-  }
+  const body: Record<string, unknown> = { transition: { id: transitionId } };
+  if (clearResolution) body["update"] = { resolution: [{ set: null }] };
 
   try {
     await client.post<void>(
       `/issue/${encodeURIComponent(issueKey.trim())}/transitions`,
       body
     );
-
     return { success: true, issueKey: issueKey.trim() };
   } catch (err) {
     if (err instanceof JiraError) {

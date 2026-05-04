@@ -2,7 +2,6 @@ import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 
 export const AddCommentInput = z.object({
-  sessionId: z.string().describe("Session ID from OAuth flow"),
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
   body: z.string().describe("Comment text body"),
   mentions: z
@@ -29,26 +28,16 @@ interface AdfNode {
 interface JiraCommentResponse {
   id: string;
   created: string;
-  author: {
-    displayName: string;
-    accountId: string;
-  };
+  author: { displayName: string; accountId: string };
 }
 
 function buildAdfBody(body: string, mentions?: { accountId: string; displayName: string }[]): AdfNode {
   const paragraphContent: AdfNode[] = [];
 
-  // Add the main text node
-  if (body) {
-    paragraphContent.push({ type: "text", text: body });
-  }
+  if (body) paragraphContent.push({ type: "text", text: body });
 
-  // Append mention nodes after the main text (fixes Atlassian #136 where mentions are downgraded to plain text)
-  if (mentions && mentions.length > 0) {
-    // Add a space separator if there's already body text
-    if (body) {
-      paragraphContent.push({ type: "text", text: " " });
-    }
+  if (mentions?.length) {
+    if (body) paragraphContent.push({ type: "text", text: " " });
     for (const mention of mentions) {
       paragraphContent.push({
         type: "mention",
@@ -64,34 +53,24 @@ function buildAdfBody(body: string, mentions?: { accountId: string; displayName:
   return {
     type: "doc",
     version: 1,
-    content: [
-      {
-        type: "paragraph",
-        content: paragraphContent,
-      },
-    ],
+    content: [{ type: "paragraph", content: paragraphContent }],
   };
 }
 
 export async function addCommentToJiraIssue(input: AddCommentInput): Promise<unknown> {
-  const { sessionId, issueKey, body, mentions } = input;
-  const client = new JiraClient(sessionId);
+  const { issueKey, body, mentions } = input;
+  const client = new JiraClient();
 
   try {
-    const adfBody = buildAdfBody(body, mentions);
-
     const comment = await client.post<JiraCommentResponse>(
       `/issue/${encodeURIComponent(issueKey.trim())}/comment`,
-      { body: adfBody }
+      { body: buildAdfBody(body, mentions) }
     );
 
     return {
       id: comment.id,
       created: comment.created,
-      author: {
-        displayName: comment.author.displayName,
-        accountId: comment.author.accountId,
-      },
+      author: { displayName: comment.author.displayName, accountId: comment.author.accountId },
     };
   } catch (err) {
     if (err instanceof JiraError) {

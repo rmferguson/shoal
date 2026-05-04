@@ -2,7 +2,6 @@ import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 
 export const GetTransitionsInput = z.object({
-  sessionId: z.string().describe("Session ID from OAuth flow"),
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
 });
 
@@ -14,16 +13,14 @@ interface JiraStatusCategory {
   name: string;
 }
 
-interface JiraTransitionTo {
-  id: string;
-  name: string;
-  statusCategory: JiraStatusCategory;
-}
-
 interface JiraTransition {
   id: string;
   name: string;
-  to: JiraTransitionTo;
+  to: {
+    id: string;
+    name: string;
+    statusCategory: JiraStatusCategory;
+  };
 }
 
 interface JiraTransitionsResponse {
@@ -31,8 +28,8 @@ interface JiraTransitionsResponse {
 }
 
 export async function getJiraTransitions(input: GetTransitionsInput): Promise<unknown> {
-  const { sessionId, issueKey } = input;
-  const client = new JiraClient(sessionId);
+  const { issueKey } = input;
+  const client = new JiraClient();
 
   try {
     const data = await client.get<JiraTransitionsResponse>(

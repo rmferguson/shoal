@@ -2,7 +2,6 @@ import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 
 export const GetIssueInput = z.object({
-  sessionId: z.string().describe("Session ID from OAuth flow"),
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
   rawAdf: z
     .boolean()
@@ -19,7 +18,6 @@ interface JiraIssueResponse {
 
 function renderAdf(adf: unknown): string {
   if (!adf || typeof adf !== "object") return "";
-  // Walk ADF and extract text content.
   const node = adf as { type?: string; text?: string; content?: unknown[] };
   if (node.text) return node.text;
   if (Array.isArray(node.content)) {
@@ -29,12 +27,11 @@ function renderAdf(adf: unknown): string {
 }
 
 export async function getJiraIssue(input: GetIssueInput): Promise<unknown> {
-  const { sessionId, issueKey, rawAdf = false } = input;
-  const client = new JiraClient(sessionId);
+  const { issueKey, rawAdf = false } = input;
+  const client = new JiraClient();
 
   let issue: JiraIssueResponse;
   try {
-    // Fetch all fields so custom fields are never silently dropped (fixes #119).
     issue = await client.get<JiraIssueResponse>(
       `/issue/${encodeURIComponent(issueKey.trim())}?expand=renderedFields`
     );
@@ -42,7 +39,6 @@ export async function getJiraIssue(input: GetIssueInput): Promise<unknown> {
     if (err instanceof JiraError) {
       return { error: err.message, status: err.status };
     }
-    // AbortError = timeout (fixes #145 hang on media-heavy ADF).
     if (err instanceof Error && err.name === "AbortError") {
       return {
         error: `Request timed out fetching ${issueKey}. Try again with rawAdf: true to skip ADF rendering.`,
@@ -60,11 +56,8 @@ export async function getJiraIssue(input: GetIssueInput): Promise<unknown> {
   const labels = fields["labels"] as string[] | undefined;
   const description = fields["description"];
 
-  const descriptionText = rawAdf
-    ? description
-    : renderAdf(description);
+  const descriptionText = rawAdf ? description : renderAdf(description);
 
-  // Surface all custom fields alongside standard ones.
   const customFields: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(fields)) {
     if (key.startsWith("customfield_")) {

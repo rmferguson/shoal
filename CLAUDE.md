@@ -1,6 +1,6 @@
 # Shoal — Jira MCP Server
 
-Shoal is a hosted MCP server for Jira. It is positioned as the quality alternative to Atlassian's official server (`mcp.atlassian.com`), which has unfixed correctness bugs and auth fragility across AI clients.
+Shoal is an open-source local MCP server for Jira. It is positioned as the quality alternative to Atlassian's official server (`mcp.atlassian.com`), which has unfixed correctness bugs and auth fragility across AI clients.
 
 **Full spec:** `shoal-jira-spec.md`
 
@@ -8,15 +8,15 @@ Shoal is a hosted MCP server for Jira. It is positioned as the quality alternati
 
 ## What it is
 
-- Remote HTTP/SSE MCP server — users paste a URL into their MCP client config
-- Multi-tenant OAuth 2.0 3LO — each user authorizes against their own Atlassian org
+- Local stdio MCP server — users configure it in their MCP client as a command
+- Auth via Atlassian API token (env vars) — no OAuth flow, no hosted server
 - Built against Jira Cloud REST API v3
-- TypeScript / Node.js
+- TypeScript / Node.js, open source
 
 ## What it is not
 
-- Not a fork — the Atlassian repo is config only, no source
-- Not a local stdio tool
+- Not a hosted multi-tenant service
+- Not a remote HTTP/SSE server
 - Not Confluence or Bitbucket (v1 is Jira only)
 
 ---
@@ -27,10 +27,9 @@ Shoal is a hosted MCP server for Jira. It is positioned as the quality alternati
 |-------|--------|
 | Runtime | Node.js 22 |
 | Language | TypeScript (strict) |
-| MCP | `@modelcontextprotocol/sdk` — `McpServer` + `StreamableHTTPServerTransport` |
-| HTTP | Express 4 |
+| MCP | `@modelcontextprotocol/sdk` — `McpServer` + `StdioServerTransport` |
 | Validation | Zod |
-| Auth | OAuth 2.0 3LO via `auth.atlassian.com` |
+| Auth | Atlassian API token (Basic Auth via env vars) |
 
 ---
 
@@ -38,27 +37,29 @@ Shoal is a hosted MCP server for Jira. It is positioned as the quality alternati
 
 ```
 src/
-  config.ts          # Environment config (PUBLIC_URL, PORT, ATLASSIAN_CLIENT_*)
-  http.ts            # Express server — MCP endpoint, OAuth routes, health check
+  config.ts          # Environment config (JIRA_SITE_URL, ATLASSIAN_USER_EMAIL, ATLASSIAN_API_TOKEN)
+  index.ts           # Entry point — stdio transport
   server.ts          # McpServer — tool registration
-  auth/
-    oauth.ts         # /auth/login + /auth/callback (consent flow)
-    tokens.ts        # Token storage + refresh (in-memory for dev, DB for prod)
-    well-known.ts    # /.well-known/oauth-protected-resource (RFC 9728)
   jira/
-    client.ts        # JiraClient — authenticated fetch wrapper, upload support
+    client.ts        # JiraClient — Basic Auth fetch wrapper, upload support
   tools/
     get-issue.ts     # getJiraIssue
     search-issues.ts # searchJiraIssuesUsingJql
     create-issue.ts  # createJiraIssue
-    (more tools added here as sprint progresses)
+    get-transitions.ts   # getJiraTransitions
+    add-comment.ts       # addCommentToJiraIssue
+    get-projects.ts      # getJiraProjects
+    transition-issue.ts  # transitionJiraIssue
+    update-issue.ts      # updateJiraIssue
+    edit-comment.ts      # editJiraIssueComment
+    manage-labels.ts     # manageJiraIssueLabels
+    add-attachment.ts    # addAttachmentToJiraIssue
+    get-comments.ts      # getJiraIssueComments
 ```
 
 ---
 
 ## Key design decisions
-
-**RFC 9728 resource metadata** — `/.well-known/oauth-protected-resource` is implemented. This is what fixes auth fragility across Cursor, VS Code, and Gemini CLI. Do not remove it.
 
 **Single POST for issue creation** — `createJiraIssue` makes exactly one POST with no retry loop. The Atlassian server's double-create bug (#132) is caused by a double-invocation pattern. Do not add retry logic to issue creation.
 
@@ -76,12 +77,9 @@ src/
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `ATLASSIAN_CLIENT_ID` | Yes (OAuth) | OAuth app client ID from developer.atlassian.com |
-| `ATLASSIAN_CLIENT_SECRET` | Yes (OAuth) | OAuth app client secret |
-| `PUBLIC_URL` | Yes (prod) | Public base URL, e.g. `https://shoal.yourdomain.com` |
-| `PORT` | No | HTTP port (default: 3000) |
-
-For local dev without OAuth, the headless API token fallback (not yet implemented) will use `ATLASSIAN_USER_EMAIL` and `ATLASSIAN_API_TOKEN`.
+| `JIRA_SITE_URL` | Yes | Your Jira instance URL, e.g. `https://yourorg.atlassian.net` |
+| `ATLASSIAN_USER_EMAIL` | Yes | Email address for your Atlassian account |
+| `ATLASSIAN_API_TOKEN` | Yes | API token from id.atlassian.com/manage-profile/security/api-tokens |
 
 ---
 
@@ -89,10 +87,28 @@ For local dev without OAuth, the headless API token fallback (not yet implemente
 
 ```bash
 npm install
-npm run dev          # tsx watch — hot reload
+npm run dev          # tsx — run directly from source
 npm run typecheck    # tsc --noEmit
 npm run build        # compile to dist/
 npm start            # run compiled server
+```
+
+### MCP client config
+
+```json
+{
+  "mcpServers": {
+    "shoal": {
+      "command": "node",
+      "args": ["/path/to/shoal/dist/index.js"],
+      "env": {
+        "JIRA_SITE_URL": "https://yourorg.atlassian.net",
+        "ATLASSIAN_USER_EMAIL": "you@example.com",
+        "ATLASSIAN_API_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
 ```
 
 ---
@@ -123,10 +139,10 @@ These are fixed in Shoal or are on the backlog. Do not reintroduce them:
 | #118 | JQL pagination broken, no nextPageToken | Fixed |
 | #145 | getJiraIssue hangs on media-heavy ADF | Fixed (timeout + rawAdf flag) |
 | #95 | Component handling broken on create | Fixed |
-| #148 | OAuth discovery missing RFC 9728 | Fixed |
-| #88 | No getJiraIssueComments tool | Backlog: moth-meg.9 |
-| #85 | Can't clear Resolution on reopen | Backlog: moth-meg.4 |
-| #140 | No comment editing | Backlog: moth-meg.6 |
+| #88 | No getJiraIssueComments tool | Fixed |
+| #85 | Can't clear Resolution on reopen | Fixed (clearResolution flag) |
+| #140 | No comment editing | Fixed |
+| #83 | No label management | Fixed |
+| #136 | @mentions stripped in comments | Fixed (ADF mention nodes) |
+| #148 | OAuth discovery missing RFC 9728 | N/A (local stdio, no OAuth) |
 | #138 | No dev panel (linked PRs/branches) | Backlog: moth-meg.10 |
-| #83 | No label management | Backlog: moth-meg.7 |
-| #136 | @mentions stripped in comments | Fix with ADF in addCommentToJiraIssue |

@@ -2,7 +2,6 @@ import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 
 export const SearchIssuesInput = z.object({
-  sessionId: z.string().describe("Session ID from OAuth flow"),
   jql: z.string().describe("JQL query string, e.g. 'project = PROJ AND status = Open'"),
   startAt: z.number().int().min(0).optional().default(0).describe("0-based offset for pagination"),
   maxResults: z.number().int().min(1).max(100).optional().default(25).describe("Number of results to return (max 100)"),
@@ -25,8 +24,8 @@ interface JiraSearchResponse {
 }
 
 export async function searchJiraIssuesUsingJql(input: SearchIssuesInput): Promise<unknown> {
-  const { sessionId, jql, startAt, maxResults, fields } = input;
-  const client = new JiraClient(sessionId);
+  const { jql, startAt, maxResults, fields } = input;
+  const client = new JiraClient();
 
   const body: Record<string, unknown> = {
     jql: jql.trim(),
@@ -37,7 +36,6 @@ export async function searchJiraIssuesUsingJql(input: SearchIssuesInput): Promis
   if (fields?.length) {
     body["fields"] = fields;
   }
-  // No fields filter = Jira returns all fields including custom ones (fixes #119).
 
   let result: JiraSearchResponse;
   try {
@@ -74,7 +72,6 @@ export async function searchJiraIssuesUsingJql(input: SearchIssuesInput): Promis
     };
   });
 
-  // Correct pagination — always return total and next offset (fixes #118).
   const nextStartAt = startAt + issues.length;
   const hasMore = nextStartAt < result.total;
 

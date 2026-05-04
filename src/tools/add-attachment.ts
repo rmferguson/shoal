@@ -2,7 +2,6 @@ import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 
 export const AddAttachmentInput = z.object({
-  sessionId: z.string().describe("Session ID from OAuth flow"),
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
   filename: z.string().describe("Name of the file to attach"),
   content: z.string().describe("Base64-encoded file content"),
@@ -24,8 +23,8 @@ interface AttachmentResponse {
 }
 
 export async function addAttachmentToJiraIssue(input: AddAttachmentInput): Promise<unknown> {
-  const { sessionId, issueKey, filename, content, mimeType } = input;
-  const client = new JiraClient(sessionId);
+  const { issueKey, filename, content, mimeType } = input;
+  const client = new JiraClient();
 
   try {
     const buffer = Buffer.from(content, "base64");

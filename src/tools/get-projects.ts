@@ -2,7 +2,6 @@ import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 
 export const GetProjectsInput = z.object({
-  sessionId: z.string().describe("Session ID from OAuth flow"),
   startAt: z.number().int().min(0).optional().default(0).describe("Pagination offset (default 0)"),
   maxResults: z
     .number()
@@ -32,8 +31,8 @@ interface JiraProjectSearchResponse {
 }
 
 export async function getJiraProjects(input: GetProjectsInput): Promise<unknown> {
-  const { sessionId, startAt, maxResults } = input;
-  const client = new JiraClient(sessionId);
+  const { startAt, maxResults } = input;
+  const client = new JiraClient();
 
   try {
     const params = new URLSearchParams({
