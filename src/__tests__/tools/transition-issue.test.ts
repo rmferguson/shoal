@@ -15,7 +15,7 @@ function captureBody(): Promise<Record<string, unknown>> {
 describe("transitionJiraIssue", () => {
   it("sends transition id in body", async () => {
     const bodyPromise = captureBody();
-    await transitionJiraIssue({ issueKey: "T-1", transitionId: "31" });
+    await transitionJiraIssue({ issueKey: "T-1", transitionId: "31", clearResolution: false });
     const body = await bodyPromise;
     expect((body.transition as Record<string, unknown>).id).toBe("31");
   });
