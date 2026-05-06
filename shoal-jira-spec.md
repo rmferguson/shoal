@@ -58,7 +58,7 @@ Requirements:
 
 **`searchJiraIssuesUsingJql`**
 - Pagination never returns `nextPageToken` or total count (#118)
-- Fix: correctly pass through `startAt`, `maxResults`, `total` from the API response
+- Fix: use `/search/jql` with cursor-based pagination (`nextPageToken` / `isLast`); always send `fields: ["*navigable"]` to get field data (new endpoint has no implicit default)
 
 **`getJiraIssue` / `searchJiraIssuesUsingJql`**
 - Custom fields including story points (`customfield_10016`) silently absent from all responses (#119)
@@ -146,6 +146,36 @@ Users who don't use a marketplace client get a URL to paste into their MCP confi
 - Submit to Claude Code, Cursor, Gemini CLI marketplaces
 - Copy plugin config formats from Atlassian repo
 - Launch post
+
+---
+
+## API contract notes
+
+### POST /rest/api/3/search/jql
+
+The classic `POST /rest/api/3/search` endpoint returns **410 Gone** as of 2025/2026 — it has been removed. All JQL searches must use the newer endpoint.
+
+**Differences from the classic endpoint:**
+
+| | Classic `/search` | New `/search/jql` |
+|---|---|---|
+| Pagination | `startAt` offset in body | `nextPageToken` cursor in body |
+| End-of-results signal | `startAt + returned >= total` | `isLast: true` in response |
+| Default fields | `*navigable` (implicit) | None — must pass `fields: ["*navigable"]` explicitly or issues come back with no field data |
+| `maxResults` in response | Yes | No |
+| `total` in response | Yes | No |
+
+**Required `fields` default:** If `fields` is omitted from the request body, the endpoint returns issue objects with only `id`, `key`, and `self` — no `fields` sub-object. Always pass `fields: ["*navigable"]` as the default to match the old endpoint's behaviour.
+
+**Issue object structure:** Field data is still nested under a `fields` key per issue, same as the classic endpoint. This is consistent with `IssueBean` across all v3 endpoints.
+
+**Pagination:** The response includes `isLast: boolean`. When `isLast` is `false`, a `nextPageToken` string is also present. Pass it as `nextPageToken` in the next request body to advance the page.
+
+**Sources:**
+- [Community: `/search/jql` is a complete disaster (pagination bugs)](https://community.atlassian.com/forums/Jira-questions/REST-The-new-rest-api-3-search-jql-endpoint-is-a-complete/qaq-p/3101716)
+- [Community: REST v3 search returns 200 with empty data](https://community.atlassian.com/forums/Jira-questions/Advanced-JIRA-search-from-REST-v3-returns-200-code-with-empty/qaq-p/3102909)
+- [Developer community: `/search/jql` not returning results](https://community.developer.atlassian.com/t/rest-api-3-search-jql-isnt-returning-results-i-know-my-jql-should-do/94630)
+- [Developer community: Inconsistency between response and schema definition](https://community.developer.atlassian.com/t/inconsistency-between-the-response-and-the-schema-definition/89818)
 
 ---
 

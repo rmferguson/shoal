@@ -3,11 +3,11 @@ import { searchJiraIssuesUsingJql } from "../../tools/search-issues.js";
 
 beforeEach(() => vi.restoreAllMocks());
 
-function stubSearch(total: number, startAt: number, issues: unknown[]) {
+function stubSearch(issues: unknown[], isLast = true, nextPageToken?: string) {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
     ok: true,
     status: 200,
-    json: () => Promise.resolve({ total, startAt, maxResults: issues.length, issues }),
+    json: () => Promise.resolve({ isLast, nextPageToken, issues }),
   }));
 }
 
@@ -25,21 +25,39 @@ function makeIssue(key: string) {
 }
 
 describe("searchJiraIssuesUsingJql — pagination", () => {
-  it("returns nextStartAt when more pages exist", async () => {
-    stubSearch(50, 0, [makeIssue("T-1"), makeIssue("T-2")]);
-    const result = await searchJiraIssuesUsingJql({ jql: "project = T", startAt: 0, maxResults: 2 }) as Record<string, unknown>;
-    expect(result.nextStartAt).toBe(2);
+  it("returns nextPageToken when more pages exist", async () => {
+    stubSearch([makeIssue("T-1"), makeIssue("T-2")], false, "cursor-abc");
+    const result = await searchJiraIssuesUsingJql({ jql: "project = T", maxResults: 2 }) as Record<string, unknown>;
+    expect(result.isLast).toBe(false);
+    expect(result.nextPageToken).toBe("cursor-abc");
   });
 
-  it("returns null nextStartAt on last page", async () => {
-    stubSearch(2, 0, [makeIssue("T-1"), makeIssue("T-2")]);
-    const result = await searchJiraIssuesUsingJql({ jql: "project = T", startAt: 0, maxResults: 25 }) as Record<string, unknown>;
-    expect(result.nextStartAt).toBeNull();
+  it("returns null nextPageToken on last page", async () => {
+    stubSearch([makeIssue("T-1"), makeIssue("T-2")], true);
+    const result = await searchJiraIssuesUsingJql({ jql: "project = T", maxResults: 25 }) as Record<string, unknown>;
+    expect(result.isLast).toBe(true);
+    expect(result.nextPageToken).toBeNull();
   });
 
-  it("returns correct nextStartAt mid-pagination", async () => {
-    stubSearch(100, 25, Array.from({ length: 25 }, (_, i) => makeIssue(`T-${i + 26}`)));
-    const result = await searchJiraIssuesUsingJql({ jql: "project = T", startAt: 25, maxResults: 25 }) as Record<string, unknown>;
-    expect(result.nextStartAt).toBe(50);
+  it("sends *navigable fields by default", async () => {
+    stubSearch([makeIssue("T-1")]);
+    await searchJiraIssuesUsingJql({ jql: "project = T", maxResults: 25 });
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
+    expect(body.fields).toEqual(["*navigable"]);
+  });
+
+  it("passes caller-specified fields instead of default", async () => {
+    stubSearch([makeIssue("T-1")]);
+    await searchJiraIssuesUsingJql({ jql: "project = T", maxResults: 25, fields: ["summary", "status"] });
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
+    expect(body.fields).toEqual(["summary", "status"]);
+  });
+
+  it("passes nextPageToken to request body for subsequent pages", async () => {
+    stubSearch(Array.from({ length: 25 }, (_, i) => makeIssue(`T-${i + 26}`)), false, "cursor-xyz");
+    await searchJiraIssuesUsingJql({ jql: "project = T", nextPageToken: "cursor-abc", maxResults: 25 });
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
+    expect(body.nextPageToken).toBe("cursor-abc");
+    expect(body.startAt).toBeUndefined();
   });
 });

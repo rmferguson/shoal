@@ -3,7 +3,7 @@ import { JiraClient, JiraError } from "../jira/client.js";
 
 export const SearchIssuesInput = z.object({
   jql: z.string().describe("JQL query string, e.g. 'project = PROJ AND status = Open'"),
-  startAt: z.number().int().min(0).optional().default(0).describe("0-based offset for pagination"),
+  nextPageToken: z.string().optional().describe("Cursor token from a previous response for pagination"),
   maxResults: z.number().int().min(1).max(100).optional().default(25).describe("Number of results to return (max 100)"),
   fields: z
     .array(z.string())
@@ -14,27 +14,28 @@ export const SearchIssuesInput = z.object({
 export type SearchIssuesInput = z.infer<typeof SearchIssuesInput>;
 
 interface JiraSearchResponse {
-  total: number;
-  startAt: number;
-  maxResults: number;
+  isLast?: boolean;
+  nextPageToken?: string;
   issues: Array<{
     key: string;
-    fields: Record<string, unknown>;
+    fields?: Record<string, unknown>;
   }>;
 }
 
 export async function searchJiraIssuesUsingJql(input: SearchIssuesInput): Promise<unknown> {
-  const { jql, startAt, maxResults, fields } = input;
+  const { jql, nextPageToken, maxResults, fields } = input;
   const client = new JiraClient();
 
   const body: Record<string, unknown> = {
     jql: jql.trim(),
-    startAt,
     maxResults,
+    // Default to *navigable to match old /search behaviour — without this the
+    // new /search/jql endpoint returns issues with no fields data.
+    fields: fields?.length ? fields : ["*navigable"],
   };
 
-  if (fields?.length) {
-    body["fields"] = fields;
+  if (nextPageToken) {
+    body["nextPageToken"] = nextPageToken;
   }
 
   let result: JiraSearchResponse;
@@ -47,8 +48,12 @@ export async function searchJiraIssuesUsingJql(input: SearchIssuesInput): Promis
     throw err;
   }
 
+  if (!Array.isArray(result.issues)) {
+    return { error: "Unexpected response shape from /search/jql", raw: result };
+  }
+
   const issues = result.issues.map((issue) => {
-    const f = issue.fields;
+    const f: Record<string, unknown> = issue.fields ?? {};
     const status = f["status"] as { name?: string } | undefined;
     const assignee = f["assignee"] as { displayName?: string } | undefined;
     const priority = f["priority"] as { name?: string } | undefined;
@@ -72,15 +77,10 @@ export async function searchJiraIssuesUsingJql(input: SearchIssuesInput): Promis
     };
   });
 
-  const nextStartAt = startAt + issues.length;
-  const hasMore = nextStartAt < result.total;
-
   return {
-    total: result.total,
-    startAt: result.startAt,
-    maxResults: result.maxResults,
     returned: issues.length,
-    nextStartAt: hasMore ? nextStartAt : null,
+    isLast: result.isLast ?? true,
+    nextPageToken: result.isLast === false ? (result.nextPageToken ?? null) : null,
     issues,
   };
 }

@@ -31,8 +31,8 @@ export function createMcpServer(): McpServer {
 
   server.tool(
     "searchJiraIssuesUsingJql",
-    "Search Jira issues using JQL. Returns paginated results with total count and next offset. " +
-      "Use nextStartAt from the response to fetch subsequent pages.",
+    "Search Jira issues using JQL. Returns paginated results. " +
+      "Use nextPageToken from the response to fetch subsequent pages.",
     SearchIssuesInput.shape,
     async (args) => {
       const result = await searchJiraIssuesUsingJql(SearchIssuesInput.parse(args));
