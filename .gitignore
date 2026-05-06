@@ -1,11 +1,14 @@
 node_modules/
 dist/
 
-sg-firm/scratch/
-sg-firm/sessions/
-sg-firm/handoff-*
+# Internal planning / sprint tooling
+sg-firm/
+memory/
+AGENTS.md
+shoal-jira-spec.md
 
 # Beads / Dolt files (added by bd init)
+.beads/
 .dolt/
 *.db
 .beads-credential-key
