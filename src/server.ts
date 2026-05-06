@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { config } from "./config.js";
 import { getJiraIssue, GetIssueInput } from "./tools/get-issue.js";
 import { searchJiraIssuesUsingJql, SearchIssuesInput } from "./tools/search-issues.js";
 import { createJiraIssue, CreateIssueInput } from "./tools/create-issue.js";
@@ -15,7 +16,7 @@ import { getJiraIssueComments, GetCommentsInput } from "./tools/get-comments.js"
 export function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "shoal",
-    version: "0.1.0",
+    version: config.version,
   });
 
   server.tool(
