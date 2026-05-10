@@ -12,6 +12,8 @@ import { editJiraIssueComment, EditCommentInput } from "./tools/edit-comment.js"
 import { manageJiraIssueLabels, ManageLabelsInput, ManageLabelsInputShape } from "./tools/manage-labels.js";
 import { addAttachmentToJiraIssue, AddAttachmentInput } from "./tools/add-attachment.js";
 import { getJiraIssueComments, GetCommentsInput } from "./tools/get-comments.js";
+import { createJiraIssueLink, CreateIssueLinkInput } from "./tools/create-issue-link.js";
+import { getJiraIssueLinkTypes, GetIssueLinkTypesInput } from "./tools/get-issue-link-types.js";
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
@@ -150,6 +152,29 @@ export function createMcpServer(): McpServer {
     GetCommentsInput.shape,
     async (args) => {
       const result = await getJiraIssueComments(GetCommentsInput.parse(args));
+      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    "getJiraIssueLinkTypes",
+    "List all issue link types configured in this Jira instance (e.g. Blocks, Relates, Duplicate). " +
+      "Call this before createJiraIssueLink to discover valid link type names.",
+    GetIssueLinkTypesInput.shape,
+    async (args) => {
+      const result = await getJiraIssueLinkTypes(GetIssueLinkTypesInput.parse(args));
+      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    "createJiraIssueLink",
+    "Create a link between two Jira issues (e.g. 'PROJ-1 blocks PROJ-2'). " +
+      "Call getJiraIssueLinkTypes first to discover valid link type names for your instance. " +
+      "The inward/outward distinction follows the link type's directional labels.",
+    CreateIssueLinkInput.shape,
+    async (args) => {
+      const result = await createJiraIssueLink(CreateIssueLinkInput.parse(args));
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     }
   );

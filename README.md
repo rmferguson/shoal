@@ -16,6 +16,7 @@ A local MCP server for Jira that works correctly. Built as a quality alternative
 | No `getJiraIssueComments` tool | Included |
 | No `editJiraIssueComment` tool | Included |
 | No `manageJiraIssueLabels` tool | Included |
+| No issue link tools | `createJiraIssueLink` + `getJiraIssueLinkTypes` |
 
 ## Tools
 
@@ -83,6 +84,33 @@ Update fields on an existing issue. Only the fields you provide are changed — 
 | `customFields` | No | Custom field values, e.g. `{ "customfield_10016": 8 }` |
 
 **Returns:** `{ success: true, issueKey }`.
+
+---
+
+### `getJiraIssueLinkTypes`
+
+List all issue link types configured in the Jira instance. Call this before `createJiraIssueLink` to discover valid type names (e.g. `Blocks`, `Relates`, `Duplicate`) and their directional labels.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| *(none)* | — | — |
+
+**Returns:** `linkTypes[]` — each with `id`, `name`, `inward` (label for the inward issue), `outward` (label for the outward issue).
+
+---
+
+### `createJiraIssueLink`
+
+Create a directional link between two issues (e.g. "PROJ-1 blocks PROJ-2"). Call `getJiraIssueLinkTypes` first to find valid type names for your instance.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `linkType` | Yes | Link type name, e.g. `Blocks`, `Relates`, `Duplicate` |
+| `inwardIssueKey` | Yes | Issue key for the inward side (e.g. the issue that "is blocked by" the outward issue) |
+| `outwardIssueKey` | Yes | Issue key for the outward side (e.g. the issue that "blocks" the inward issue) |
+| `comment` | No | Optional comment to add alongside the link |
+
+**Returns:** `{ success: true, inwardIssueKey, outwardIssueKey, linkType }`.
 
 ---
 
