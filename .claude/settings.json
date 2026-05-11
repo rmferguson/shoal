@@ -1,6 +1,6 @@
 {
   "enabledPlugins": {
-    "firm@firm": true
+    "firm@firm": false
   },
   "hooks": {
     "PreCompact": [
