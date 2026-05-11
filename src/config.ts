@@ -1,4 +1,5 @@
-import { version } from "../package.json" with { type: "json" };
+import pkg from "../package.json" with { type: "json" };
+const { version } = pkg;
 
 const required = (name: string): string => {
   const val = process.env[name];
