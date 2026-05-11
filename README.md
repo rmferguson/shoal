@@ -56,12 +56,14 @@ Create an issue. Makes exactly one API call — no retry logic that could cause 
 |-----------|----------|-------------|
 | `projectKey` | Yes | Project key, e.g. `PROJ` |
 | `summary` | Yes | Issue title |
-| `issueType` | No | Issue type name (default: `Task`) |
+| `issueType` | No | Issue type name (default: `Task`). Pass `Epic` to create an epic. |
 | `description` | No | Plain text description — wrapped in ADF automatically |
 | `assigneeAccountId` | No | Atlassian account ID of the assignee |
 | `priority` | No | Priority name, e.g. `High`, `Medium`, `Low` |
 | `labels` | No | Array of label strings |
 | `components` | No | Array of component names |
+| `parent` | No | Parent issue key to nest this issue under an epic, e.g. `PROJ-10`. Works for next-gen projects and classic projects using the parent link model. |
+| `epicName` | No | Epic short label (classic projects only) — separate from `summary`, shown on the epic chip. Set when `issueType` is `Epic` on a classic project. |
 | `customFields` | No | Map of custom field values, e.g. `{ "customfield_10016": 5 }` for story points |
 
 **Returns:** `key`, `id`, `url`.
@@ -81,9 +83,20 @@ Update fields on an existing issue. Only the fields you provide are changed — 
 | `assigneeAccountId` | No | Atlassian account ID; pass empty string `""` to unassign |
 | `labels` | No | Full replacement label set |
 | `components` | No | Full replacement component set (by name) |
+| `parent` | No | Parent issue key — assign or change the epic for this issue, e.g. `PROJ-10`. |
 | `customFields` | No | Custom field values, e.g. `{ "customfield_10016": 8 }` |
 
 **Returns:** `{ success: true, issueKey }`.
+
+---
+
+### Working with epics
+
+**Creating an epic:** pass `issueType: "Epic"` to `createJiraIssue`. On classic projects, also pass `epicName` — this is the short label shown on the epic chip in the board UI, and is stored separately from `summary` in `customfield_10011`. Next-gen (team-managed) projects don't have a separate epic name field; `summary` is sufficient.
+
+**Assigning a child issue to an epic:** pass `parent: "EPIC-KEY"` to `createJiraIssue` or `updateJiraIssue`. This sets `{ parent: { key } }` on the fields object and works for next-gen projects and classic projects using the parent link model.
+
+**Legacy classic projects** (older Jira instances that use `customfield_10014` for epic links rather than `parent`) aren't covered by the `parent` parameter. Use `customFields: { "customfield_10014": "EPIC-KEY" }` as a fallback for those.
 
 ---
 

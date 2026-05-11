@@ -18,6 +18,10 @@ export const UpdateIssueInput = z.object({
     .array(z.string())
     .optional()
     .describe("Component names to set on the issue (serialized as [{ name }] objects)"),
+  parent: z
+    .string()
+    .optional()
+    .describe("Parent issue key — use this to assign or change the epic for this issue (e.g. PROJ-10). Works for next-gen projects and classic projects using the parent link model."),
   customFields: z
     .record(z.unknown())
     .optional()
@@ -35,7 +39,7 @@ function wrapInAdf(text: string): unknown {
 }
 
 export async function updateJiraIssue(input: UpdateIssueInput): Promise<unknown> {
-  const { issueKey, summary, description, priority, assigneeAccountId, labels, components, customFields } = input;
+  const { issueKey, summary, description, priority, assigneeAccountId, labels, components, parent, customFields } = input;
 
   const fields: Record<string, unknown> = {};
 
@@ -47,6 +51,7 @@ export async function updateJiraIssue(input: UpdateIssueInput): Promise<unknown>
   }
   if (labels !== undefined) fields["labels"] = labels;
   if (components !== undefined) fields["components"] = components.map((name) => ({ name }));
+  if (parent !== undefined) fields["parent"] = { key: parent.trim().toUpperCase() };
   if (customFields !== undefined) Object.assign(fields, customFields);
 
   try {
