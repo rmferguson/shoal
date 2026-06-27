@@ -3,7 +3,6 @@ dist/
 
 # Internal planning / sprint tooling
 sg-firm/
-memory/
 AGENTS.md
 shoal-jira-spec.md
 
