@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
+import { extractIssueFields } from "./issue-fields.js";
 
 export const SearchIssuesInput = z.object({
   jql: z.string().describe("JQL query string, e.g. 'project = PROJ AND status = Open'"),
@@ -53,28 +54,9 @@ export async function searchJiraIssuesUsingJql(input: SearchIssuesInput): Promis
   }
 
   const issues = result.issues.map((issue) => {
-    const f: Record<string, unknown> = issue.fields ?? {};
-    const status = f["status"] as { name?: string } | undefined;
-    const assignee = f["assignee"] as { displayName?: string } | undefined;
-    const priority = f["priority"] as { name?: string } | undefined;
-    const issuetype = f["issuetype"] as { name?: string } | undefined;
-
-    const customFields: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(f)) {
-      if (key.startsWith("customfield_")) {
-        customFields[key] = value;
-      }
-    }
-
-    return {
-      key: issue.key,
-      summary: f["summary"] as string | undefined,
-      status: status?.name,
-      assignee: assignee?.displayName,
-      priority: priority?.name,
-      issueType: issuetype?.name,
-      customFields,
-    };
+    const { summary, status, assignee, priority, issueType, customFields } =
+      extractIssueFields(issue.fields ?? {});
+    return { key: issue.key, summary, status, assignee, priority, issueType, customFields };
   });
 
   return {
