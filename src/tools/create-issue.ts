@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { JiraClient, JiraError } from "../jira/client.js";
+import { JiraClient } from "../jira/client.js";
 import { plainTextToAdf } from "./adf-utils.js";
+import { toToolError } from "./errors.js";
 
 export const CreateIssueInput = z.object({
   projectKey: z.string().describe("Jira project key, e.g. PROJ"),
@@ -53,9 +54,6 @@ export async function createJiraIssue(input: CreateIssueInput): Promise<unknown>
     );
     return { key: result.key, id: result.id, url: result.self };
   } catch (err) {
-    if (err instanceof JiraError) {
-      return { error: err.message, status: err.status, body: err.body };
-    }
-    throw err;
+    return toToolError(err, "Request timed out creating issue.");
   }
 }

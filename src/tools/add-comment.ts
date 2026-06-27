@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { JiraClient, JiraError } from "../jira/client.js";
+import { JiraClient } from "../jira/client.js";
 import { buildAdfWithMentions } from "./adf-utils.js";
+import { toToolError } from "./errors.js";
 
 export const AddCommentInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -40,12 +41,6 @@ export async function addCommentToJiraIssue(input: AddCommentInput): Promise<unk
       author: { displayName: comment.author.displayName, accountId: comment.author.accountId },
     };
   } catch (err) {
-    if (err instanceof JiraError) {
-      return { error: err.message, status: err.status };
-    }
-    if (err instanceof Error && err.name === "AbortError") {
-      return { error: `Request timed out adding comment to ${issueKey}.` };
-    }
-    throw err;
+    return toToolError(err, `Request timed out adding comment to ${issueKey}.`);
   }
 }

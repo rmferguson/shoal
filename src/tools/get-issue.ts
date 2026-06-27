@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { JiraClient, JiraError } from "../jira/client.js";
+import { JiraClient } from "../jira/client.js";
 import { extractIssueFields } from "./issue-fields.js";
 import { renderAdf } from "./adf-utils.js";
+import { toToolError } from "./errors.js";
 
 export const GetIssueInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -28,15 +29,10 @@ export async function getJiraIssue(input: GetIssueInput): Promise<unknown> {
       `/issue/${encodeURIComponent(issueKey.trim())}?expand=renderedFields`
     );
   } catch (err) {
-    if (err instanceof JiraError) {
-      return { error: err.message, status: err.status };
-    }
-    if (err instanceof Error && err.name === "AbortError") {
-      return {
-        error: `Request timed out fetching ${issueKey}. Try again with rawAdf: true to skip ADF rendering.`,
-      };
-    }
-    throw err;
+    return toToolError(
+      err,
+      `Request timed out fetching ${issueKey}. Try again with rawAdf: true to skip ADF rendering.`
+    );
   }
 
   const fields = issue.fields;

@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { JiraClient, JiraError } from "../jira/client.js";
+import { JiraClient } from "../jira/client.js";
+import { toToolError } from "./errors.js";
 
 export const GetIssueLinkTypesInput = z.object({});
 
@@ -30,12 +31,6 @@ export async function getJiraIssueLinkTypes(): Promise<unknown> {
       })),
     };
   } catch (err) {
-    if (err instanceof JiraError) {
-      return { error: err.message, status: err.status };
-    }
-    if (err instanceof Error && err.name === "AbortError") {
-      return { error: "Request timed out fetching issue link types." };
-    }
-    throw err;
+    return toToolError(err, "Request timed out fetching issue link types.");
   }
 }
