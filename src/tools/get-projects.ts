@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
+import { nextStartAt } from "./pagination.js";
 
 export const GetProjectsInput = z.object({
   startAt: z.number().int().min(0).optional().default(0).describe("Pagination offset (default 0)"),
@@ -45,14 +46,14 @@ export async function getJiraProjects(input: GetProjectsInput): Promise<unknown>
     );
 
     const returned = data.values.length;
-    const nextStartAt = startAt + returned < data.total ? startAt + returned : null;
+    const next = nextStartAt(startAt, returned, data.total);
 
     return {
       total: data.total,
       startAt: data.startAt,
       maxResults: data.maxResults,
       returned,
-      nextStartAt,
+      nextStartAt: next,
       projects: data.values.map((p) => ({
         id: p.id,
         key: p.key,

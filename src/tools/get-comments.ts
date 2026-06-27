@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
+import { nextStartAt } from "./pagination.js";
 
 export const GetCommentsInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -52,14 +53,14 @@ export async function getJiraIssueComments(input: GetCommentsInput): Promise<unk
     );
 
     const returned = data.comments.length;
-    const nextStartAt = startAt + returned < data.total ? startAt + returned : null;
+    const next = nextStartAt(startAt, returned, data.total);
 
     return {
       total: data.total,
       startAt: data.startAt,
       maxResults: data.maxResults,
       returned,
-      nextStartAt,
+      nextStartAt: next,
       comments: data.comments.map((c) => ({
         id: c.id,
         author: { displayName: c.author.displayName, accountId: c.author.accountId },
