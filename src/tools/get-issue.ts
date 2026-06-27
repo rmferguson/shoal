@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
+import { extractIssueFields } from "./issue-fields.js";
 
 export const GetIssueInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -48,31 +49,21 @@ export async function getJiraIssue(input: GetIssueInput): Promise<unknown> {
   }
 
   const fields = issue.fields;
-  const status = fields["status"] as { name?: string } | undefined;
-  const assignee = fields["assignee"] as { displayName?: string } | undefined;
-  const priority = fields["priority"] as { name?: string } | undefined;
-  const issuetype = fields["issuetype"] as { name?: string } | undefined;
+  const { summary, status, assignee, priority, issueType, customFields } = extractIssueFields(fields);
+
   const reporter = fields["reporter"] as { displayName?: string } | undefined;
   const labels = fields["labels"] as string[] | undefined;
   const description = fields["description"];
-
   const descriptionText = rawAdf ? description : renderAdf(description);
-
-  const customFields: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(fields)) {
-    if (key.startsWith("customfield_")) {
-      customFields[key] = value;
-    }
-  }
 
   return {
     key: issue.key,
-    summary: fields["summary"] as string | undefined,
-    status: status?.name,
-    assignee: assignee?.displayName,
+    summary,
+    status,
+    assignee,
     reporter: reporter?.displayName,
-    priority: priority?.name,
-    issueType: issuetype?.name,
+    priority,
+    issueType,
     labels: labels ?? [],
     description: descriptionText,
     customFields,
