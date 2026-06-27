@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
+import { plainTextToAdf } from "./adf-utils.js";
 
 export const UpdateIssueInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -30,21 +31,13 @@ export const UpdateIssueInput = z.object({
 
 export type UpdateIssueInput = z.infer<typeof UpdateIssueInput>;
 
-function wrapInAdf(text: string): unknown {
-  return {
-    type: "doc",
-    version: 1,
-    content: [{ type: "paragraph", content: [{ type: "text", text }] }],
-  };
-}
-
 export async function updateJiraIssue(input: UpdateIssueInput): Promise<unknown> {
   const { issueKey, summary, description, priority, assigneeAccountId, labels, components, parent, customFields } = input;
 
   const fields: Record<string, unknown> = {};
 
   if (summary !== undefined) fields["summary"] = summary;
-  if (description !== undefined) fields["description"] = wrapInAdf(description);
+  if (description !== undefined) fields["description"] = plainTextToAdf(description);
   if (priority !== undefined) fields["priority"] = { name: priority };
   if (assigneeAccountId !== undefined) {
     fields["assignee"] = assigneeAccountId === "" ? null : { accountId: assigneeAccountId };

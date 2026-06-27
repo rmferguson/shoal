@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
+import { buildAdfWithMentions } from "./adf-utils.js";
 
 export const AddCommentInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -17,44 +18,10 @@ export const AddCommentInput = z.object({
 
 export type AddCommentInput = z.infer<typeof AddCommentInput>;
 
-interface AdfNode {
-  type: string;
-  text?: string;
-  attrs?: Record<string, unknown>;
-  content?: AdfNode[];
-  version?: number;
-}
-
 interface JiraCommentResponse {
   id: string;
   created: string;
   author: { displayName: string; accountId: string };
-}
-
-function buildAdfBody(body: string, mentions?: { accountId: string; displayName: string }[]): AdfNode {
-  const paragraphContent: AdfNode[] = [];
-
-  if (body) paragraphContent.push({ type: "text", text: body });
-
-  if (mentions?.length) {
-    if (body) paragraphContent.push({ type: "text", text: " " });
-    for (const mention of mentions) {
-      paragraphContent.push({
-        type: "mention",
-        attrs: {
-          id: mention.accountId,
-          text: `@${mention.displayName}`,
-          accessLevel: "APPLICATION",
-        },
-      });
-    }
-  }
-
-  return {
-    type: "doc",
-    version: 1,
-    content: [{ type: "paragraph", content: paragraphContent }],
-  };
 }
 
 export async function addCommentToJiraIssue(input: AddCommentInput): Promise<unknown> {
@@ -64,7 +31,7 @@ export async function addCommentToJiraIssue(input: AddCommentInput): Promise<unk
   try {
     const comment = await client.post<JiraCommentResponse>(
       `/issue/${encodeURIComponent(issueKey.trim())}/comment`,
-      { body: buildAdfBody(body, mentions) }
+      { body: buildAdfWithMentions(body, mentions) }
     );
 
     return {

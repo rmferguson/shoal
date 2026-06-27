@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 import { nextStartAt } from "./pagination.js";
+import { renderAdf } from "./adf-utils.js";
 
 export const GetCommentsInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -32,14 +33,6 @@ interface JiraCommentsResponse {
   startAt: number;
   maxResults: number;
   comments: JiraComment[];
-}
-
-function renderAdf(adf: unknown): string {
-  if (!adf || typeof adf !== "object") return "";
-  const node = adf as { type?: string; text?: string; content?: unknown[] };
-  if (node.text) return node.text;
-  if (Array.isArray(node.content)) return node.content.map(renderAdf).join("");
-  return "";
 }
 
 export async function getJiraIssueComments(input: GetCommentsInput): Promise<unknown> {

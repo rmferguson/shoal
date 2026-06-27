@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
+import { plainTextToAdf } from "./adf-utils.js";
 
 export const CreateIssueInput = z.object({
   projectKey: z.string().describe("Jira project key, e.g. PROJ"),
@@ -25,14 +26,6 @@ export const CreateIssueInput = z.object({
 });
 
 export type CreateIssueInput = z.infer<typeof CreateIssueInput>;
-
-function plainTextToAdf(text: string): unknown {
-  return {
-    type: "doc",
-    version: 1,
-    content: [{ type: "paragraph", content: [{ type: "text", text }] }],
-  };
-}
 
 export async function createJiraIssue(input: CreateIssueInput): Promise<unknown> {
   const { projectKey, summary, issueType, description, assigneeAccountId, priority, labels, components, parent, epicName, customFields } = input;

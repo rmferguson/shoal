@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
+import { plainTextToAdf } from "./adf-utils.js";
 
 export const EditCommentInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -15,14 +16,6 @@ interface JiraCommentResponse {
   author: { displayName: string; accountId: string };
 }
 
-function buildAdfBody(text: string): object {
-  return {
-    type: "doc",
-    version: 1,
-    content: [{ type: "paragraph", content: [{ type: "text", text }] }],
-  };
-}
-
 export async function editJiraIssueComment(input: EditCommentInput): Promise<unknown> {
   const { issueKey, commentId, body } = input;
   const client = new JiraClient();
@@ -30,7 +23,7 @@ export async function editJiraIssueComment(input: EditCommentInput): Promise<unk
   try {
     const comment = await client.put<JiraCommentResponse>(
       `/issue/${encodeURIComponent(issueKey.trim())}/comment/${encodeURIComponent(commentId)}`,
-      { body: buildAdfBody(body) }
+      { body: plainTextToAdf(body) }
     );
 
     return {

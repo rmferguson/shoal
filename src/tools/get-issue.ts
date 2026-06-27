@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { JiraClient, JiraError } from "../jira/client.js";
 import { extractIssueFields } from "./issue-fields.js";
+import { renderAdf } from "./adf-utils.js";
 
 export const GetIssueInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -15,16 +16,6 @@ export type GetIssueInput = z.infer<typeof GetIssueInput>;
 interface JiraIssueResponse {
   key: string;
   fields: Record<string, unknown>;
-}
-
-function renderAdf(adf: unknown): string {
-  if (!adf || typeof adf !== "object") return "";
-  const node = adf as { type?: string; text?: string; content?: unknown[] };
-  if (node.text) return node.text;
-  if (Array.isArray(node.content)) {
-    return node.content.map(renderAdf).join("");
-  }
-  return "";
 }
 
 export async function getJiraIssue(input: GetIssueInput): Promise<unknown> {
