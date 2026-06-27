@@ -1,5 +1,11 @@
 # Retrospective History
 
+## Retro: 2026-06-27 (session 2)
+- Tasks completed: 10 (1 resolved as side-effect, 1 deleted)
+- New learnings: 4 workflow patterns added to project memory
+- Pruned/archived: 0
+- Key insight: Shared error extraction (toToolError) incidentally fixed a latent AbortError re-throw in two tools — extraction work reveals cross-caller inconsistency as a free side-effect
+
 ## Retro: 2026-06-27
 - Tasks completed: 0 dispatched (setup-only session)
 - New learnings: 4 seeded across 4 members (architect, backend, tester, technical-writer)
