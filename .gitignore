@@ -11,4 +11,10 @@ shoal-jira-spec.md
 .beads/
 .dolt/
 *.db
+*.db-shm
+*.db-wal
 .beads-credential-key
+
+# Firm plugin — ephemeral session state
+.claude/rules/
+.claude/worktrees/
