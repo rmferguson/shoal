@@ -13,11 +13,11 @@ export class JiraError extends Error {
 
 export class JiraClient {
   private readonly basicAuth: string;
-  private readonly cfg: JiraConfig;
+  private readonly config: JiraConfig;
 
-  constructor(cfg?: JiraConfig) {
-    this.cfg = cfg ?? getJiraConfig();
-    this.basicAuth = Buffer.from(`${this.cfg.email}:${this.cfg.apiToken}`).toString("base64");
+  constructor(config?: JiraConfig) {
+    this.config = config ?? getJiraConfig();
+    this.basicAuth = Buffer.from(`${this.config.email}:${this.config.apiToken}`).toString("base64");
   }
 
   private async request<T>(
@@ -25,32 +25,32 @@ export class JiraClient {
     path: string,
     body?: unknown
   ): Promise<T> {
-    const url = `${this.cfg.siteUrl}/rest/api/3${path}`;
+    const url = `${this.config.siteUrl}/rest/api/3${path}`;
 
-    const init: RequestInit = {
+    const requestInit: RequestInit = {
       method,
       headers: {
         Authorization: `Basic ${this.basicAuth}`,
         Accept: "application/json",
         ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
       },
-      signal: AbortSignal.timeout(this.cfg.requestTimeoutMs),
+      signal: AbortSignal.timeout(this.config.requestTimeoutMs),
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     };
 
-    const resp = await fetch(url, init);
+    const response = await fetch(url, requestInit);
 
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => "");
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
       throw new JiraError(
-        `Jira API ${resp.status} ${resp.statusText}: ${path}`,
-        resp.status,
+        `Jira API ${response.status} ${response.statusText}: ${path}`,
+        response.status,
         text
       );
     }
 
-    if (resp.status === 204) return undefined as T;
-    return resp.json() as Promise<T>;
+    if (response.status === 204) return undefined as T;
+    return response.json() as Promise<T>;
   }
 
   get<T>(path: string): Promise<T> {
@@ -66,9 +66,9 @@ export class JiraClient {
   }
 
   async upload<T>(path: string, form: FormData): Promise<T> {
-    const url = `${this.cfg.siteUrl}/rest/api/3${path}`;
+    const url = `${this.config.siteUrl}/rest/api/3${path}`;
 
-    const resp = await fetch(url, {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Basic ${this.basicAuth}`,
@@ -76,18 +76,18 @@ export class JiraClient {
         "X-Atlassian-Token": "no-check",
       },
       body: form,
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(this.config.requestTimeoutMs),
     });
 
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => "");
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
       throw new JiraError(
-        `Jira API ${resp.status} ${resp.statusText}: ${path}`,
-        resp.status,
+        `Jira API ${response.status} ${response.statusText}: ${path}`,
+        response.status,
         text
       );
     }
 
-    return resp.json() as Promise<T>;
+    return response.json() as Promise<T>;
   }
 }
