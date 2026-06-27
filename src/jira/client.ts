@@ -76,7 +76,7 @@ export class JiraClient {
         "X-Atlassian-Token": "no-check",
       },
       body: form,
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(this.cfg.requestTimeoutMs),
     });
 
     if (!resp.ok) {
