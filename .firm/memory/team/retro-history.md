@@ -1,5 +1,11 @@
 # Retrospective History
 
+## Retro: 2026-06-27 (session 3)
+- Tasks completed: 0 (test-after pass + infrastructure fix)
+- New learnings: 2 added to project memory
+- Pruned/archived: 0
+- Key insight: .claude/worktrees/ pollutes vitest test discovery; exclude .claude/** in vitest config and prune worktrees immediately after merging
+
 ## Retro: 2026-06-27 (session 2)
 - Tasks completed: 10 (1 resolved as side-effect, 1 deleted)
 - New learnings: 4 workflow patterns added to project memory
