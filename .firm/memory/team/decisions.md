@@ -8,5 +8,5 @@
 
 ## Conventions
 - Stack: TypeScript / Node.js 22, @modelcontextprotocol/sdk, Zod, Vitest
-- Tracker: GitHub Issues (private repo — not yet created)
+- Tracker: GitHub Issues (https://github.com/rmferguson/shoal/issues)
 - JSON tool: jq
