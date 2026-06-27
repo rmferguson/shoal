@@ -22,7 +22,8 @@
     "start:jira": "node dist/index-jira.js",
     "start:github": "node dist/index-github.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.2",
