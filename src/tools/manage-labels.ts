@@ -9,7 +9,7 @@ const ManageLabelsBase = z.object({
 });
 
 export const ManageLabelsInput = ManageLabelsBase.refine(
-  (d) => (d.add?.length ?? 0) + (d.remove?.length ?? 0) > 0,
+  (data) => (data.add?.length ?? 0) + (data.remove?.length ?? 0) > 0,
   { message: "Provide at least one label to add or remove" }
 );
 

@@ -37,12 +37,12 @@ export async function addAttachmentToJiraIssue(input: AddAttachmentInput): Promi
       form
     );
 
-    return attachments.map((a) => ({
-      id: a.id,
-      filename: a.filename,
-      size: a.size,
-      mimeType: a.mimeType,
-      created: a.created,
+    return attachments.map((attachment) => ({
+      id: attachment.id,
+      filename: attachment.filename,
+      size: attachment.size,
+      mimeType: attachment.mimeType,
+      created: attachment.created,
     }));
   } catch (err) {
     return toToolError(err, `Request timed out uploading attachment to ${issueKey}.`);

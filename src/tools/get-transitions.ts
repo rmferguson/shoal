@@ -39,13 +39,13 @@ export async function getJiraTransitions(input: GetTransitionsInput): Promise<un
 
     return {
       issueKey: issueKey.trim(),
-      transitions: data.transitions.map((t) => ({
-        id: t.id,
-        name: t.name,
+      transitions: data.transitions.map((transition) => ({
+        id: transition.id,
+        name: transition.name,
         to: {
-          id: t.to.id,
-          name: t.to.name,
-          statusCategory: t.to.statusCategory,
+          id: transition.to.id,
+          name: transition.to.name,
+          statusCategory: transition.to.statusCategory,
         },
       })),
     };

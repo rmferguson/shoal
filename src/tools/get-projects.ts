@@ -55,12 +55,12 @@ export async function getJiraProjects(input: GetProjectsInput): Promise<unknown>
       maxResults: data.maxResults,
       returned,
       nextStartAt: next,
-      projects: data.values.map((p) => ({
-        id: p.id,
-        key: p.key,
-        name: p.name,
-        projectTypeKey: p.projectTypeKey,
-        style: p.style,
+      projects: data.values.map((project) => ({
+        id: project.id,
+        key: project.key,
+        name: project.name,
+        projectTypeKey: project.projectTypeKey,
+        style: project.style,
       })),
     };
   } catch (err) {

@@ -23,11 +23,11 @@ export async function getJiraIssueLinkTypes(): Promise<unknown> {
   try {
     const data = await client.get<LinkTypesResponse>("/issueLinkType");
     return {
-      linkTypes: data.issueLinkTypes.map((t) => ({
-        id: t.id,
-        name: t.name,
-        inward: t.inward,
-        outward: t.outward,
+      linkTypes: data.issueLinkTypes.map((linkType) => ({
+        id: linkType.id,
+        name: linkType.name,
+        inward: linkType.inward,
+        outward: linkType.outward,
       })),
     };
   } catch (err) {

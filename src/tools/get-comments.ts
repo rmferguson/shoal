@@ -55,12 +55,12 @@ export async function getJiraIssueComments(input: GetCommentsInput): Promise<unk
       maxResults: data.maxResults,
       returned,
       nextStartAt: next,
-      comments: data.comments.map((c) => ({
-        id: c.id,
-        author: { displayName: c.author.displayName, accountId: c.author.accountId },
-        created: c.created,
-        updated: c.updated,
-        body: renderAdf(c.body),
+      comments: data.comments.map((comment) => ({
+        id: comment.id,
+        author: { displayName: comment.author.displayName, accountId: comment.author.accountId },
+        created: comment.created,
+        updated: comment.updated,
+        body: renderAdf(comment.body),
       })),
     };
   } catch (err) {
