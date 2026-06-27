@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { JiraClient, JiraError } from "../jira/client.js";
+import { JiraClient } from "../jira/client.js";
+import { toToolError } from "./errors.js";
 
 export const AddAttachmentInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -44,12 +45,6 @@ export async function addAttachmentToJiraIssue(input: AddAttachmentInput): Promi
       created: a.created,
     }));
   } catch (err) {
-    if (err instanceof JiraError) {
-      return { error: err.message, status: err.status };
-    }
-    if (err instanceof Error && err.name === "AbortError") {
-      return { error: `Request timed out uploading attachment to ${issueKey}.` };
-    }
-    throw err;
+    return toToolError(err, `Request timed out uploading attachment to ${issueKey}.`);
   }
 }

@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { JiraClient, JiraError } from "../jira/client.js";
+import { JiraClient } from "../jira/client.js";
+import { toToolError } from "./errors.js";
 
 export const EditCommentInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -39,12 +40,6 @@ export async function editJiraIssueComment(input: EditCommentInput): Promise<unk
       author: { displayName: comment.author.displayName, accountId: comment.author.accountId },
     };
   } catch (err) {
-    if (err instanceof JiraError) {
-      return { error: err.message, status: err.status };
-    }
-    if (err instanceof Error && err.name === "AbortError") {
-      return { error: `Request timed out editing comment ${commentId} on ${issueKey}.` };
-    }
-    throw err;
+    return toToolError(err, `Request timed out editing comment ${commentId} on ${issueKey}.`);
   }
 }

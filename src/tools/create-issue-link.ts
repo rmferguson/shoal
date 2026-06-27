@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { JiraClient, JiraError } from "../jira/client.js";
+import { JiraClient } from "../jira/client.js";
+import { toToolError } from "./errors.js";
 
 export const CreateIssueLinkInput = z.object({
   linkType: z.string().describe(
@@ -41,12 +42,6 @@ export async function createJiraIssueLink(input: CreateIssueLinkInput): Promise<
     await client.post<void>("/issueLink", body);
     return { success: true, inwardIssueKey, outwardIssueKey, linkType };
   } catch (err) {
-    if (err instanceof JiraError) {
-      return { error: err.message, status: err.status, body: err.body };
-    }
-    if (err instanceof Error && err.name === "AbortError") {
-      return { error: `Request timed out creating issue link.` };
-    }
-    throw err;
+    return toToolError(err, "Request timed out creating issue link.");
   }
 }

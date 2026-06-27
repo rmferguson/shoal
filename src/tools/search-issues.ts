@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { JiraClient, JiraError } from "../jira/client.js";
+import { JiraClient } from "../jira/client.js";
 import { extractIssueFields } from "./issue-fields.js";
+import { toToolError } from "./errors.js";
 
 export const SearchIssuesInput = z.object({
   jql: z.string().describe("JQL query string, e.g. 'project = PROJ AND status = Open'"),
@@ -43,10 +44,7 @@ export async function searchJiraIssuesUsingJql(input: SearchIssuesInput): Promis
   try {
     result = await client.post<JiraSearchResponse>("/search/jql", body);
   } catch (err) {
-    if (err instanceof JiraError) {
-      return { error: err.message, status: err.status };
-    }
-    throw err;
+    return toToolError(err, "Request timed out searching issues.");
   }
 
   if (!Array.isArray(result.issues)) {

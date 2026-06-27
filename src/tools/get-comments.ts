@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { JiraClient, JiraError } from "../jira/client.js";
+import { JiraClient } from "../jira/client.js";
 import { nextStartAt } from "./pagination.js";
+import { toToolError } from "./errors.js";
 
 export const GetCommentsInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -70,12 +71,6 @@ export async function getJiraIssueComments(input: GetCommentsInput): Promise<unk
       })),
     };
   } catch (err) {
-    if (err instanceof JiraError) {
-      return { error: err.message, status: err.status };
-    }
-    if (err instanceof Error && err.name === "AbortError") {
-      return { error: `Request timed out fetching comments for ${issueKey}.` };
-    }
-    throw err;
+    return toToolError(err, `Request timed out fetching comments for ${issueKey}.`);
   }
 }
