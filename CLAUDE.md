@@ -131,3 +131,11 @@ Do not use TodoWrite, TaskCreate, or markdown TODO lists. Use `bd` only.
 ## Atlassian server bugs
 
 See `ISSUES.md` for the full list of bugs fixed in Shoal vs. `mcp.atlassian.com`.
+
+---
+
+## Project Context
+
+- Stack: TypeScript / Node.js 22, @modelcontextprotocol/sdk, Zod, Vitest
+- Tracker: GitHub Issues (private repo — not yet created)
+- JSON tool: jq
