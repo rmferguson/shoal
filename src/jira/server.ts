@@ -156,7 +156,7 @@ export function registerJiraTools(server: McpServer): void {
       "Call this before createJiraIssueLink to discover valid link type names.",
     GetIssueLinkTypesInput.shape,
     async (args) => {
-      const result = await getJiraIssueLinkTypes(GetIssueLinkTypesInput.parse(args));
+      const result = await getJiraIssueLinkTypes();
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     }
   );
