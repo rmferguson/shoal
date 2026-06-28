@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { GitHubClient, GitHubError } from "../../github/client.js";
+import { getGitHubConfig } from "../../github/config.js";
 
 export const AddCommentToGithubIssueInput = z.object({
   owner: z.string().describe("GitHub repository owner (user or organization)"),
@@ -23,7 +24,7 @@ interface GitHubComment {
 
 export async function addCommentToGithubIssue(input: AddCommentToGithubIssueInput): Promise<unknown> {
   const { owner, repo, issue_number, body } = input;
-  const client = new GitHubClient();
+  const client = new GitHubClient(getGitHubConfig());
 
   try {
     const comment = await client.post<GitHubComment>(

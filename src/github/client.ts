@@ -1,4 +1,4 @@
-import { getGitHubConfig, GitHubConfig } from "./config.js";
+import { GitHubConfig } from "./config.js";
 
 export class GitHubError extends Error {
   constructor(
@@ -15,10 +15,9 @@ export class GitHubClient {
   private readonly token: string;
   private readonly timeoutMs: number;
 
-  constructor(cfg?: GitHubConfig) {
-    const resolved = cfg ?? getGitHubConfig();
-    this.token = resolved.token;
-    this.timeoutMs = resolved.requestTimeoutMs;
+  constructor(cfg: GitHubConfig) {
+    this.token = cfg.token;
+    this.timeoutMs = cfg.requestTimeoutMs;
   }
 
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -35,19 +34,19 @@ export class GitHubClient {
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     };
 
-    const resp = await fetch(url, init);
+    const response = await fetch(url, init);
 
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => "");
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
       throw new GitHubError(
-        `GitHub API ${resp.status} ${resp.statusText}: ${path}`,
-        resp.status,
+        `GitHub API ${response.status} ${response.statusText}: ${path}`,
+        response.status,
         text
       );
     }
 
-    if (resp.status === 204) return undefined as T;
-    return resp.json() as Promise<T>;
+    if (response.status === 204) return undefined as T;
+    return response.json() as Promise<T>;
   }
 
   get<T>(path: string): Promise<T> {

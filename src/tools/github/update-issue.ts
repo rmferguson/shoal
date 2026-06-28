@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { GitHubClient, GitHubError } from "../../github/client.js";
+import { getGitHubConfig } from "../../github/config.js";
 
 export const UpdateGithubIssueInput = z.object({
   owner: z.string().describe("GitHub repository owner (user or organization)"),
@@ -24,7 +25,7 @@ interface GitHubUpdatedIssue {
 
 export async function updateGithubIssue(input: UpdateGithubIssueInput): Promise<unknown> {
   const { owner, repo, issue_number, title, body, state, labels, assignees, milestone } = input;
-  const client = new GitHubClient();
+  const client = new GitHubClient(getGitHubConfig());
 
   const payload: Record<string, unknown> = {};
   if (title !== undefined) payload["title"] = title;
