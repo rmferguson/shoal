@@ -23,6 +23,11 @@
 - `src/jira/config.ts` now uses `REQUEST_TIMEOUT_MS` constant and a private `buildConfig(siteUrl, email, apiToken)` helper — same pattern as `src/github/config.ts` (added: 2026-06-27, dispatch: sprint-jira-internals)
 - `src/jira/client.ts` uses a private `checkResponse(response, path)` method shared by `request()` and `upload()` to throw `JiraError` on non-OK status — `upload()` has no 204 guard (attachments always return a body) (added: 2026-06-27, dispatch: sprint-jira-internals)
 
+## Server Wiring
+- `registerTool<TInput>` helper in `src/jira/server.ts` matches `src/github/server.ts` exactly — schema param uses structural typing `{ shape: Record<string, ZodTypeAny>; parse(input: unknown): TInput }`. For ZodEffects (refined schemas like `ManageLabelsInput`), pass `{ shape: ManageLabelsInputShape, parse: (args: unknown) => ManageLabelsInput.parse(args) }` inline (added: 2026-06-27, dispatch: sprint-jira-server)
+- `JiraClient` is instantiated once in `registerJiraTools()` after `tryGetJiraConfig()` succeeds and passed as a second param to all 14 tool functions — tests add `const client = new JiraClient()` at module level (no mocking needed because `setup.ts` sets env vars) (added: 2026-06-27, dispatch: sprint-jira-server)
+- `getJiraIssueLinkTypes` still exports `GetIssueLinkTypesInput` (`z.object({})`) and is registered with `registerTool` using `_input` since it takes no meaningful args — harmless (added: 2026-06-27, dispatch: sprint-jira-server)
+
 ## Error Handling Architecture
 - `src/tools/errors.ts` is now protocol-agnostic (AbortError only); `src/jira/errors.ts` wraps it and adds JiraError handling — all Jira tools import `toToolError` from `../jira/errors.js` (added: 2026-06-27, dispatch: sprint-misc-cleanup)
 - Stage files only after ALL edits to that file are complete to avoid bundling unrelated changes into one commit (added: 2026-06-27, dispatch: sprint-misc-cleanup)
