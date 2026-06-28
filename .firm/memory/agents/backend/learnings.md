@@ -13,5 +13,8 @@
 ## Preferences
 - (none yet)
 
+## Codebase Patterns (GitHub)
+- `src/github/config.ts` uses a named `REQUEST_TIMEOUT_MS` constant and a `buildConfig(token)` helper — both `getGitHubConfig` and `tryGetGitHubConfig` delegate to it (added: 2026-06-27, dispatch: sprint-github-refactor)
+
 ## Cross-Agent Notes
 - (none yet)
