@@ -2,13 +2,12 @@
   "name": "@aquarium-tools/shoal",
   "version": "0.2.0",
   "private": true,
-  "description": "Jira and GitHub Issues MCP server — correct, complete, open source",
+  "description": "Jira MCP server — correct, complete, open source",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "shoal": "dist/index.js",
-    "shoal-jira": "dist/index-jira.js",
-    "shoal-github": "dist/index-github.js"
+    "shoal-jira": "dist/index-jira.js"
   },
   "files": [
     "dist/"
@@ -17,10 +16,8 @@
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "dev:jira": "tsx src/index-jira.ts",
-    "dev:github": "tsx src/index-github.ts",
     "start": "node dist/index.js",
     "start:jira": "node dist/index-jira.js",
-    "start:github": "node dist/index-github.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepublishOnly": "npm run build"
@@ -35,7 +32,7 @@
     "typescript": "^5.8.3",
     "vitest": "^4.1.5"
   },
-  "keywords": ["mcp", "jira", "atlassian", "github", "issues", "model-context-protocol"],
+  "keywords": ["mcp", "jira", "atlassian", "model-context-protocol"],
   "engines": {
     "node": ">=22"
   },
