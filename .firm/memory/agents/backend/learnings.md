@@ -23,5 +23,9 @@
 - `src/jira/config.ts` now uses `REQUEST_TIMEOUT_MS` constant and a private `buildConfig(siteUrl, email, apiToken)` helper — same pattern as `src/github/config.ts` (added: 2026-06-27, dispatch: sprint-jira-internals)
 - `src/jira/client.ts` uses a private `checkResponse(response, path)` method shared by `request()` and `upload()` to throw `JiraError` on non-OK status — `upload()` has no 204 guard (attachments always return a body) (added: 2026-06-27, dispatch: sprint-jira-internals)
 
+## Error Handling Architecture
+- `src/tools/errors.ts` is now protocol-agnostic (AbortError only); `src/jira/errors.ts` wraps it and adds JiraError handling — all Jira tools import `toToolError` from `../jira/errors.js` (added: 2026-06-27, dispatch: sprint-misc-cleanup)
+- Stage files only after ALL edits to that file are complete to avoid bundling unrelated changes into one commit (added: 2026-06-27, dispatch: sprint-misc-cleanup)
+
 ## Cross-Agent Notes
 - (none yet)

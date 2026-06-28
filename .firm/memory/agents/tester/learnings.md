@@ -6,7 +6,7 @@
 - GitHub tools have their own test subdirectory: `src/__tests__/tools/`
 
 ## Gotchas
-- (none yet)
+- Shared fetch-capture helpers in Vitest must return a superset mock response covering all fields any caller reads — tools that access nested properties (e.g. `comment.author.displayName`, `user.login`) will throw if `json()` returns `{}` because `toToolError` re-throws unknown errors rather than swallowing them (added: 2026-06-27, dispatch: sprint-test-helpers)
 
 ## Preferences
 - (none yet)
