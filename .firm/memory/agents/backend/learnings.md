@@ -19,5 +19,9 @@
 - `src/github/server.ts` uses a `registerTool<TInput>` helper with structural typing for the schema param — pass the ZodObject directly; the helper calls `.shape` and `.parse` internally (added: 2026-06-27, dispatch: sprint-github-refactor)
 - MCP tool name strings in `src/github/server.ts` use `GitHub` casing (e.g. `listGitHubIssues`); TypeScript function names in `src/tools/github/*.ts` still use `Github` casing — intentionally separate namespaces (added: 2026-06-27, dispatch: sprint-github-refactor)
 
+## Codebase Patterns (Jira internals)
+- `src/jira/config.ts` now uses `REQUEST_TIMEOUT_MS` constant and a private `buildConfig(siteUrl, email, apiToken)` helper — same pattern as `src/github/config.ts` (added: 2026-06-27, dispatch: sprint-jira-internals)
+- `src/jira/client.ts` uses a private `checkResponse(response, path)` method shared by `request()` and `upload()` to throw `JiraError` on non-OK status — `upload()` has no 204 guard (attachments always return a body) (added: 2026-06-27, dispatch: sprint-jira-internals)
+
 ## Cross-Agent Notes
 - (none yet)
