@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { addCommentToGithubIssue } from "../../../tools/github/add-comment.js";
+import { captureRequestBody } from "../../helpers.js";
 
 beforeEach(() => vi.restoreAllMocks());
 
@@ -11,20 +12,6 @@ function stubFetch(body: unknown, status = 201) {
     json: () => Promise.resolve(body),
     text: () => Promise.resolve(JSON.stringify(body)),
   }));
-}
-
-function captureRequestBody(): Promise<Record<string, unknown>> {
-  return new Promise((resolve) => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((_url: string, init: RequestInit) => {
-      resolve(JSON.parse(init.body as string));
-      return Promise.resolve({
-        ok: true,
-        status: 201,
-        json: () => Promise.resolve({ id: 99, body: "Great idea!", created_at: "2026-03-01T00:00:00Z", user: { login: "eve" } }),
-        text: () => Promise.resolve(""),
-      });
-    }));
-  });
 }
 
 describe("addCommentToGithubIssue", () => {

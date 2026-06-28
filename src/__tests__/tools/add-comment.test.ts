@@ -1,20 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { addCommentToJiraIssue } from "../../tools/add-comment.js";
+import { captureBody } from "../helpers.js";
 
 beforeEach(() => vi.restoreAllMocks());
-
-function captureBody(): Promise<Record<string, unknown>> {
-  return new Promise((resolve) => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((_url: string, init: RequestInit) => {
-      resolve(JSON.parse(init.body as string));
-      return Promise.resolve({
-        ok: true,
-        status: 201,
-        json: () => Promise.resolve({ id: "1", created: "2026-01-01", author: { displayName: "Alice", accountId: "abc" } }),
-      });
-    }));
-  });
-}
 
 describe("addCommentToJiraIssue", () => {
   it("wraps body in ADF doc structure", async () => {

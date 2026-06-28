@@ -1,16 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { transitionJiraIssue } from "../../tools/transition-issue.js";
+import { captureBody } from "../helpers.js";
 
 beforeEach(() => vi.restoreAllMocks());
-
-function captureBody(): Promise<Record<string, unknown>> {
-  return new Promise((resolve) => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((_url: string, init: RequestInit) => {
-      resolve(JSON.parse(init.body as string));
-      return Promise.resolve({ ok: true, status: 204 });
-    }));
-  });
-}
 
 describe("transitionJiraIssue", () => {
   it("sends transition id in body", async () => {

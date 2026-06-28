@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createJiraIssue } from "../../tools/create-issue.js";
+import { captureBody } from "../helpers.js";
 
 beforeEach(() => vi.restoreAllMocks());
 
@@ -9,15 +10,6 @@ function stubCreate(response = { key: "TEST-1", id: "10001", self: "https://test
     status: 201,
     json: () => Promise.resolve(response),
   }));
-}
-
-function captureBody(): Promise<Record<string, unknown>> {
-  return new Promise((resolve) => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((_url: string, init: RequestInit) => {
-      resolve(JSON.parse(init.body as string));
-      return Promise.resolve({ ok: true, status: 201, json: () => Promise.resolve({ key: "T-1", id: "1", self: "url" }) });
-    }));
-  });
 }
 
 describe("createJiraIssue", () => {
