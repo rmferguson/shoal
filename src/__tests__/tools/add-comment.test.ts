@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { addCommentToJiraIssue } from "../../tools/add-comment.js";
+import { JiraClient } from "../../jira/client.js";
+
+const client = new JiraClient();
 
 beforeEach(() => vi.restoreAllMocks());
 
@@ -19,7 +22,7 @@ function captureBody(): Promise<Record<string, unknown>> {
 describe("addCommentToJiraIssue", () => {
   it("wraps body in ADF doc structure", async () => {
     const bodyPromise = captureBody();
-    await addCommentToJiraIssue({ issueKey: "TEST-1", body: "Hello" });
+    await addCommentToJiraIssue({ issueKey: "TEST-1", body: "Hello" }, client);
     const sent = await bodyPromise;
     const adf = sent.body as Record<string, unknown>;
     expect(adf.type).toBe("doc");
@@ -32,7 +35,7 @@ describe("addCommentToJiraIssue", () => {
       issueKey: "TEST-1",
       body: "FYI",
       mentions: [{ accountId: "user-123", displayName: "Alice" }],
-    });
+    }, client);
     const sent = await bodyPromise;
     const adf = sent.body as { content: Array<{ content: Array<{ type: string; attrs: Record<string, unknown> }> }> };
     const paragraph = adf.content[0].content;
