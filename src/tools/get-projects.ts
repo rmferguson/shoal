@@ -32,9 +32,8 @@ interface JiraProjectSearchResponse {
   values: JiraProject[];
 }
 
-export async function getJiraProjects(input: GetProjectsInput): Promise<unknown> {
+export async function getJiraProjects(input: GetProjectsInput, client: JiraClient): Promise<unknown> {
   const { startAt, maxResults } = input;
-  const client = new JiraClient();
 
   try {
     const params = new URLSearchParams({

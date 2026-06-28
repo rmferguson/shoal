@@ -17,9 +17,8 @@ export const TransitionIssueInput = z.object({
 
 export type TransitionIssueInput = z.infer<typeof TransitionIssueInput>;
 
-export async function transitionJiraIssue(input: TransitionIssueInput): Promise<unknown> {
+export async function transitionJiraIssue(input: TransitionIssueInput, client: JiraClient): Promise<unknown> {
   const { issueKey, transitionId, clearResolution } = input;
-  const client = new JiraClient();
 
   const body: Record<string, unknown> = { transition: { id: transitionId } };
   if (clearResolution) body["update"] = { resolution: [{ set: null }] };

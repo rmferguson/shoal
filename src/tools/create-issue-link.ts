@@ -18,9 +18,8 @@ export const CreateIssueLinkInput = z.object({
 
 export type CreateIssueLinkInput = z.infer<typeof CreateIssueLinkInput>;
 
-export async function createJiraIssueLink(input: CreateIssueLinkInput): Promise<unknown> {
+export async function createJiraIssueLink(input: CreateIssueLinkInput, client: JiraClient): Promise<unknown> {
   const { linkType, inwardIssueKey, outwardIssueKey, comment } = input;
-  const client = new JiraClient();
 
   const body: Record<string, unknown> = {
     type: { name: linkType },

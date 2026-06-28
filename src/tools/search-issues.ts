@@ -24,9 +24,8 @@ interface JiraSearchResponse {
   }>;
 }
 
-export async function searchJiraIssuesUsingJql(input: SearchIssuesInput): Promise<unknown> {
+export async function searchJiraIssuesUsingJql(input: SearchIssuesInput, client: JiraClient): Promise<unknown> {
   const { jql, nextPageToken, maxResults, fields } = input;
-  const client = new JiraClient();
 
   const body: Record<string, unknown> = {
     jql: jql.trim(),

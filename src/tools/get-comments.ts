@@ -36,9 +36,8 @@ interface JiraCommentsResponse {
   comments: JiraComment[];
 }
 
-export async function getJiraIssueComments(input: GetCommentsInput): Promise<unknown> {
+export async function getJiraIssueComments(input: GetCommentsInput, client: JiraClient): Promise<unknown> {
   const { issueKey, startAt, maxResults } = input;
-  const client = new JiraClient();
   const clampedMax = Math.min(maxResults, 100);
 
   try {

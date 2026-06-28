@@ -17,9 +17,8 @@ export const ManageLabelsInputShape = ManageLabelsBase.shape;
 
 export type ManageLabelsInput = z.infer<typeof ManageLabelsInput>;
 
-export async function manageJiraIssueLabels(input: ManageLabelsInput): Promise<unknown> {
+export async function manageJiraIssueLabels(input: ManageLabelsInput, client: JiraClient): Promise<unknown> {
   const { issueKey, add, remove } = input;
-  const client = new JiraClient();
 
   const labelOps: Array<{ add: string } | { remove: string }> = [];
   for (const label of add ?? []) labelOps.push({ add: label });
