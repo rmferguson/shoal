@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { GitHubClient } from "../../../github/client.js";
 import { updateGithubIssue } from "../../../tools/github/update-issue.js";
 
 beforeEach(() => vi.restoreAllMocks());
+
+const client = new GitHubClient({ token: "test-token", requestTimeoutMs: 5000 });
 
 function stubFetch(body: unknown, status = 200) {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
@@ -30,7 +33,7 @@ function captureRequestBody(): Promise<Record<string, unknown>> {
 describe("updateGithubIssue", () => {
   it("returns number, title, state, and html_url on success", async () => {
     stubFetch({ number: 5, title: "Updated title", state: "closed", html_url: "https://github.com/owner/repo/issues/5" });
-    const result = await updateGithubIssue({ owner: "owner", repo: "repo", issue_number: 5, title: "Updated title", state: "closed" }) as Record<string, unknown>;
+    const result = await updateGithubIssue(client, { owner: "owner", repo: "repo", issueNumber: 5, title: "Updated title", state: "closed" }) as Record<string, unknown>;
     expect(result.number).toBe(5);
     expect(result.title).toBe("Updated title");
     expect(result.state).toBe("closed");
@@ -39,7 +42,7 @@ describe("updateGithubIssue", () => {
 
   it("only sends provided fields in payload", async () => {
     const bodyPromise = captureRequestBody();
-    await updateGithubIssue({ owner: "owner", repo: "repo", issue_number: 5, title: "New title" });
+    await updateGithubIssue(client, { owner: "owner", repo: "repo", issueNumber: 5, title: "New title" });
     const sent = await bodyPromise;
     expect(sent.title).toBe("New title");
     expect(sent).not.toHaveProperty("body");
@@ -51,10 +54,10 @@ describe("updateGithubIssue", () => {
 
   it("sends full payload when all fields provided", async () => {
     const bodyPromise = captureRequestBody();
-    await updateGithubIssue({
+    await updateGithubIssue(client, {
       owner: "owner",
       repo: "repo",
-      issue_number: 5,
+      issueNumber: 5,
       title: "Full update",
       body: "Updated body",
       state: "closed",
@@ -73,7 +76,7 @@ describe("updateGithubIssue", () => {
 
   it("returns error, status, and body on GitHubError", async () => {
     stubFetch({ message: "Not Found" }, 404);
-    const result = await updateGithubIssue({ owner: "owner", repo: "repo", issue_number: 9999, state: "closed" }) as Record<string, unknown>;
+    const result = await updateGithubIssue(client, { owner: "owner", repo: "repo", issueNumber: 9999, state: "closed" }) as Record<string, unknown>;
     expect(result.error).toBeDefined();
     expect(result.status).toBe(404);
     expect(result).toHaveProperty("body");
@@ -81,6 +84,6 @@ describe("updateGithubIssue", () => {
 
   it("throws on network error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("socket hang up")));
-    await expect(updateGithubIssue({ owner: "owner", repo: "repo", issue_number: 5, title: "Fail" })).rejects.toThrow("socket hang up");
+    await expect(updateGithubIssue(client, { owner: "owner", repo: "repo", issueNumber: 5, title: "Fail" })).rejects.toThrow("socket hang up");
   });
 });

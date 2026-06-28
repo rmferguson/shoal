@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { GitHubClient } from "../../../github/client.js";
 import { createGithubIssue } from "../../../tools/github/create-issue.js";
 import { captureRequestBody } from "../../helpers.js";
 
 beforeEach(() => vi.restoreAllMocks());
+
+const client = new GitHubClient({ token: "test-token", requestTimeoutMs: 5000 });
 
 function stubFetch(body: unknown, status = 201) {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
@@ -17,7 +20,7 @@ function stubFetch(body: unknown, status = 201) {
 describe("createGithubIssue", () => {
   it("returns number, title, and html_url on success", async () => {
     stubFetch({ number: 10, title: "New issue", html_url: "https://github.com/owner/repo/issues/10" });
-    const result = await createGithubIssue({ owner: "owner", repo: "repo", title: "New issue" }) as Record<string, unknown>;
+    const result = await createGithubIssue(client, { owner: "owner", repo: "repo", title: "New issue" }) as Record<string, unknown>;
     expect(result.number).toBe(10);
     expect(result.title).toBe("New issue");
     expect(result.html_url).toBe("https://github.com/owner/repo/issues/10");
@@ -25,14 +28,14 @@ describe("createGithubIssue", () => {
 
   it("sends title in request payload", async () => {
     const bodyPromise = captureRequestBody();
-    await createGithubIssue({ owner: "owner", repo: "repo", title: "My new issue" });
+    await createGithubIssue(client, { owner: "owner", repo: "repo", title: "My new issue" });
     const sent = await bodyPromise;
     expect(sent.title).toBe("My new issue");
   });
 
   it("includes optional fields when provided", async () => {
     const bodyPromise = captureRequestBody();
-    await createGithubIssue({
+    await createGithubIssue(client, {
       owner: "owner",
       repo: "repo",
       title: "With extras",
@@ -50,7 +53,7 @@ describe("createGithubIssue", () => {
 
   it("omits optional fields when not provided", async () => {
     const bodyPromise = captureRequestBody();
-    await createGithubIssue({ owner: "owner", repo: "repo", title: "Minimal" });
+    await createGithubIssue(client, { owner: "owner", repo: "repo", title: "Minimal" });
     const sent = await bodyPromise;
     expect(sent).not.toHaveProperty("body");
     expect(sent).not.toHaveProperty("labels");
@@ -60,7 +63,7 @@ describe("createGithubIssue", () => {
 
   it("returns error, status, and body on GitHubError", async () => {
     stubFetch({ message: "Validation Failed" }, 422);
-    const result = await createGithubIssue({ owner: "owner", repo: "repo", title: "Bad" }) as Record<string, unknown>;
+    const result = await createGithubIssue(client, { owner: "owner", repo: "repo", title: "Bad" }) as Record<string, unknown>;
     expect(result.error).toBeDefined();
     expect(result.status).toBe(422);
     expect(result).toHaveProperty("body");
@@ -68,6 +71,6 @@ describe("createGithubIssue", () => {
 
   it("throws on network error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("timeout")));
-    await expect(createGithubIssue({ owner: "owner", repo: "repo", title: "Fail" })).rejects.toThrow("timeout");
+    await expect(createGithubIssue(client, { owner: "owner", repo: "repo", title: "Fail" })).rejects.toThrow("timeout");
   });
 });

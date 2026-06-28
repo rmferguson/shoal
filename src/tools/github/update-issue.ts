@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { GitHubClient, GitHubError } from "../../github/client.js";
-import { getGitHubConfig } from "../../github/config.js";
+import { GitHubClient } from "../../github/client.js";
+import { handleGitHubError } from "./errors.js";
 
 export const UpdateGithubIssueInput = z.object({
   owner: z.string().describe("GitHub repository owner (user or organization)"),
   repo: z.string().describe("GitHub repository name"),
-  issue_number: z.number().int().min(1).describe("Issue number to update"),
+  issueNumber: z.number().int().min(1).describe("Issue number to update"),
   title: z.string().optional().describe("New issue title"),
   body: z.string().optional().describe("New issue body (markdown supported)"),
   state: z.enum(["open", "closed"]).optional().describe("New issue state"),
@@ -23,9 +23,8 @@ interface GitHubUpdatedIssue {
   html_url: string;
 }
 
-export async function updateGithubIssue(input: UpdateGithubIssueInput): Promise<unknown> {
-  const { owner, repo, issue_number, title, body, state, labels, assignees, milestone } = input;
-  const client = new GitHubClient(getGitHubConfig());
+export async function updateGithubIssue(client: GitHubClient, input: UpdateGithubIssueInput): Promise<unknown> {
+  const { owner, repo, issueNumber, title, body, state, labels, assignees, milestone } = input;
 
   const payload: Record<string, unknown> = {};
   if (title !== undefined) payload["title"] = title;
@@ -37,7 +36,7 @@ export async function updateGithubIssue(input: UpdateGithubIssueInput): Promise<
 
   try {
     const issue = await client.patch<GitHubUpdatedIssue>(
-      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issue_number}`,
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}`,
       payload
     );
 
@@ -48,9 +47,6 @@ export async function updateGithubIssue(input: UpdateGithubIssueInput): Promise<
       html_url: issue.html_url,
     };
   } catch (err) {
-    if (err instanceof GitHubError) {
-      return { error: err.message, status: err.status, body: err.body };
-    }
-    throw err;
+    return handleGitHubError(err);
   }
 }

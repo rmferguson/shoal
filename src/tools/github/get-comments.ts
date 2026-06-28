@@ -1,13 +1,13 @@
 import { z } from "zod";
-import { GitHubClient, GitHubError } from "../../github/client.js";
-import { getGitHubConfig } from "../../github/config.js";
+import { GitHubClient } from "../../github/client.js";
+import { handleGitHubError } from "./errors.js";
 
 export const GetGithubIssueCommentsInput = z.object({
   owner: z.string().describe("GitHub repository owner (user or organization)"),
   repo: z.string().describe("GitHub repository name"),
-  issue_number: z.number().int().min(1).describe("Issue number"),
+  issueNumber: z.number().int().min(1).describe("Issue number"),
   page: z.number().int().min(1).default(1).describe("Page number for pagination"),
-  per_page: z.number().int().min(1).max(100).default(30).describe("Number of comments per page (max 100)"),
+  perPage: z.number().int().min(1).max(100).default(30).describe("Number of comments per page (max 100)"),
 });
 
 export type GetGithubIssueCommentsInput = z.infer<typeof GetGithubIssueCommentsInput>;
@@ -24,18 +24,17 @@ interface GitHubCommentItem {
   user: GitHubUser;
 }
 
-export async function getGithubIssueComments(input: GetGithubIssueCommentsInput): Promise<unknown> {
-  const { owner, repo, issue_number, page, per_page } = input;
-  const client = new GitHubClient(getGitHubConfig());
+export async function getGithubIssueComments(client: GitHubClient, input: GetGithubIssueCommentsInput): Promise<unknown> {
+  const { owner, repo, issueNumber, page, perPage } = input;
 
   const params = new URLSearchParams({
     page: String(page),
-    per_page: String(per_page),
+    per_page: String(perPage),
   });
 
   try {
     const comments = await client.get<GitHubCommentItem[]>(
-      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issue_number}/comments?${params.toString()}`
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/comments?${params.toString()}`
     );
 
     return {
@@ -49,9 +48,6 @@ export async function getGithubIssueComments(input: GetGithubIssueCommentsInput)
       })),
     };
   } catch (err) {
-    if (err instanceof GitHubError) {
-      return { error: err.message, status: err.status };
-    }
-    throw err;
+    return handleGitHubError(err);
   }
 }

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { GitHubClient, GitHubError } from "../../github/client.js";
-import { getGitHubConfig } from "../../github/config.js";
+import { GitHubClient } from "../../github/client.js";
+import { handleGitHubError } from "./errors.js";
 
 export const ListGithubIssuesInput = z.object({
   owner: z.string().describe("GitHub repository owner (user or organization)"),
@@ -8,7 +8,7 @@ export const ListGithubIssuesInput = z.object({
   state: z.enum(["open", "closed", "all"]).default("open").describe("Filter issues by state"),
   labels: z.string().optional().describe("Comma-separated list of label names to filter by"),
   page: z.number().int().min(1).default(1).describe("Page number for pagination"),
-  per_page: z.number().int().min(1).max(100).default(30).describe("Number of issues per page (max 100)"),
+  perPage: z.number().int().min(1).max(100).default(30).describe("Number of issues per page (max 100)"),
 });
 
 export type ListGithubIssuesInput = z.infer<typeof ListGithubIssuesInput>;
@@ -32,14 +32,13 @@ interface GitHubIssueItem {
   html_url: string;
 }
 
-export async function listGithubIssues(input: ListGithubIssuesInput): Promise<unknown> {
-  const { owner, repo, state, labels, page, per_page } = input;
-  const client = new GitHubClient(getGitHubConfig());
+export async function listGithubIssues(client: GitHubClient, input: ListGithubIssuesInput): Promise<unknown> {
+  const { owner, repo, state, labels, page, perPage } = input;
 
   const params = new URLSearchParams({
     state,
     page: String(page),
-    per_page: String(per_page),
+    per_page: String(perPage),
   });
   if (labels) params.set("labels", labels);
 
@@ -62,9 +61,6 @@ export async function listGithubIssues(input: ListGithubIssuesInput): Promise<un
       })),
     };
   } catch (err) {
-    if (err instanceof GitHubError) {
-      return { error: err.message, status: err.status };
-    }
-    throw err;
+    return handleGitHubError(err);
   }
 }
