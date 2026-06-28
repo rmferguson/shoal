@@ -32,5 +32,10 @@
 - `src/tools/errors.ts` is now protocol-agnostic (AbortError only); `src/jira/errors.ts` wraps it and adds JiraError handling — all Jira tools import `toToolError` from `../jira/errors.js` (added: 2026-06-27, dispatch: sprint-misc-cleanup)
 - Stage files only after ALL edits to that file are complete to avoid bundling unrelated changes into one commit (added: 2026-06-27, dispatch: sprint-misc-cleanup)
 
+## GitHub Error Handling
+- `handleGitHubError` lives in `src/tools/github/errors.ts` and always returns `{ error, status, body }` — three tools previously omitted `body`; the shape is now uniform (added: 2026-06-27, dispatch: sprint-github-coupling)
+- GitHub tool functions take `client: GitHubClient` as their first parameter; `src/github/server.ts` instantiates one `GitHubClient` per `registerGithubTools()` call (added: 2026-06-27, dispatch: sprint-github-coupling)
+- GitHub Zod schemas use camelCase param names (`issueNumber`, `perPage`) matching Jira conventions; `URLSearchParams` keys remain snake_case (`per_page`, `issue_number`) to satisfy the GitHub REST API (added: 2026-06-27, dispatch: sprint-github-coupling)
+
 ## Cross-Agent Notes
 - (none yet)
