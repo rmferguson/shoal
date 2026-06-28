@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { GitHubClient, GitHubError } from "../../github/client.js";
+import { GitHubClient } from "../../github/client.js";
 import { getGitHubConfig } from "../../github/config.js";
+import { handleGitHubError } from "./errors.js";
 
 export const GetGithubIssueInput = z.object({
   owner: z.string().describe("GitHub repository owner (user or organization)"),
@@ -60,9 +61,6 @@ export async function getGithubIssue(input: GetGithubIssueInput): Promise<unknow
       user: issue.user.login,
     };
   } catch (err) {
-    if (err instanceof GitHubError) {
-      return { error: err.message, status: err.status };
-    }
-    throw err;
+    return handleGitHubError(err);
   }
 }
