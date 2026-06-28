@@ -20,6 +20,17 @@ export class JiraClient {
     this.basicAuth = Buffer.from(`${this.config.email}:${this.config.apiToken}`).toString("base64");
   }
 
+  private async checkResponse(response: Response, path: string): Promise<void> {
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new JiraError(
+        `Jira API ${response.status} ${response.statusText}: ${path}`,
+        response.status,
+        text
+      );
+    }
+  }
+
   private async request<T>(
     method: string,
     path: string,
@@ -27,7 +38,7 @@ export class JiraClient {
   ): Promise<T> {
     const url = `${this.config.siteUrl}/rest/api/3${path}`;
 
-    const requestInit: RequestInit = {
+    const init: RequestInit = {
       method,
       headers: {
         Authorization: `Basic ${this.basicAuth}`,
@@ -38,16 +49,9 @@ export class JiraClient {
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     };
 
-    const response = await fetch(url, requestInit);
+    const response = await fetch(url, init);
 
-    if (!response.ok) {
-      const text = await response.text().catch(() => "");
-      throw new JiraError(
-        `Jira API ${response.status} ${response.statusText}: ${path}`,
-        response.status,
-        text
-      );
-    }
+    await this.checkResponse(response, path);
 
     if (response.status === 204) return undefined as T;
     return response.json() as Promise<T>;
@@ -79,14 +83,7 @@ export class JiraClient {
       signal: AbortSignal.timeout(this.config.requestTimeoutMs),
     });
 
-    if (!response.ok) {
-      const text = await response.text().catch(() => "");
-      throw new JiraError(
-        `Jira API ${response.status} ${response.statusText}: ${path}`,
-        response.status,
-        text
-      );
-    }
+    await this.checkResponse(response, path);
 
     return response.json() as Promise<T>;
   }
