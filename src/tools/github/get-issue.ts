@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { GitHubClient } from "../../github/client.js";
-import { getGitHubConfig } from "../../github/config.js";
 import { handleGitHubError } from "./errors.js";
 
 export const GetGithubIssueInput = z.object({
@@ -38,9 +37,8 @@ interface GitHubIssueDetail {
   user: GitHubUser;
 }
 
-export async function getGithubIssue(input: GetGithubIssueInput): Promise<unknown> {
+export async function getGithubIssue(client: GitHubClient, input: GetGithubIssueInput): Promise<unknown> {
   const { owner, repo, issue_number } = input;
-  const client = new GitHubClient(getGitHubConfig());
 
   try {
     const issue = await client.get<GitHubIssueDetail>(

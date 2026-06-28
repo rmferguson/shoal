@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { GitHubClient } from "../../../github/client.js";
 import { listGithubIssues } from "../../../tools/github/list-issues.js";
 
 beforeEach(() => vi.restoreAllMocks());
+
+const client = new GitHubClient({ token: "test-token", requestTimeoutMs: 5000 });
 
 function stubFetch(body: unknown, status = 200) {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
@@ -30,7 +33,7 @@ function makeIssue(overrides: Record<string, unknown> = {}) {
 describe("listGithubIssues", () => {
   it("returns issue list with mapped fields", async () => {
     stubFetch([makeIssue()]);
-    const result = await listGithubIssues({ owner: "owner", repo: "repo", state: "open", page: 1, per_page: 30 }) as Record<string, unknown>;
+    const result = await listGithubIssues(client, { owner: "owner", repo: "repo", state: "open", page: 1, per_page: 30 }) as Record<string, unknown>;
     expect(result.returned).toBe(1);
     const issues = result.issues as Record<string, unknown>[];
     expect(issues).toHaveLength(1);
@@ -44,20 +47,20 @@ describe("listGithubIssues", () => {
 
   it("returns empty list when no issues", async () => {
     stubFetch([]);
-    const result = await listGithubIssues({ owner: "owner", repo: "repo", state: "open", page: 1, per_page: 30 }) as Record<string, unknown>;
+    const result = await listGithubIssues(client, { owner: "owner", repo: "repo", state: "open", page: 1, per_page: 30 }) as Record<string, unknown>;
     expect(result.returned).toBe(0);
     expect(result.issues).toEqual([]);
   });
 
   it("returns error and status on GitHubError", async () => {
     stubFetch({ message: "Not Found" }, 404);
-    const result = await listGithubIssues({ owner: "owner", repo: "nope", state: "open", page: 1, per_page: 30 }) as Record<string, unknown>;
+    const result = await listGithubIssues(client, { owner: "owner", repo: "nope", state: "open", page: 1, per_page: 30 }) as Record<string, unknown>;
     expect(result.error).toBeDefined();
     expect(result.status).toBe(404);
   });
 
   it("throws on network error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network failure")));
-    await expect(listGithubIssues({ owner: "owner", repo: "repo", state: "open", page: 1, per_page: 30 })).rejects.toThrow("network failure");
+    await expect(listGithubIssues(client, { owner: "owner", repo: "repo", state: "open", page: 1, per_page: 30 })).rejects.toThrow("network failure");
   });
 });

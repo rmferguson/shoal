@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { GitHubClient } from "../../github/client.js";
-import { getGitHubConfig } from "../../github/config.js";
 import { handleGitHubError } from "./errors.js";
 
 export const GetGithubIssueCommentsInput = z.object({
@@ -25,9 +24,8 @@ interface GitHubCommentItem {
   user: GitHubUser;
 }
 
-export async function getGithubIssueComments(input: GetGithubIssueCommentsInput): Promise<unknown> {
+export async function getGithubIssueComments(client: GitHubClient, input: GetGithubIssueCommentsInput): Promise<unknown> {
   const { owner, repo, issue_number, page, per_page } = input;
-  const client = new GitHubClient(getGitHubConfig());
 
   const params = new URLSearchParams({
     page: String(page),

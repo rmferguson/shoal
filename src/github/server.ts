@@ -1,5 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { GitHubClient } from "./client.js";
+import { getGitHubConfig } from "./config.js";
 import { ListGithubIssuesInput, listGithubIssues } from "../tools/github/list-issues.js";
 import { GetGithubIssueInput, getGithubIssue } from "../tools/github/get-issue.js";
 import { CreateGithubIssueInput, createGithubIssue } from "../tools/github/create-issue.js";
@@ -21,12 +23,14 @@ function registerTool<TInput>(
 }
 
 export function registerGithubTools(server: McpServer): void {
+  const client = new GitHubClient(getGitHubConfig());
+
   registerTool(
     server,
     "listGitHubIssues",
     "List issues in a GitHub repository with optional filters for state, labels, and pagination",
     ListGithubIssuesInput,
-    listGithubIssues
+    (input) => listGithubIssues(client, input)
   );
 
   registerTool(
@@ -34,7 +38,7 @@ export function registerGithubTools(server: McpServer): void {
     "getGitHubIssue",
     "Get a specific GitHub issue by number, including body, labels, assignees, and metadata",
     GetGithubIssueInput,
-    getGithubIssue
+    (input) => getGithubIssue(client, input)
   );
 
   registerTool(
@@ -42,7 +46,7 @@ export function registerGithubTools(server: McpServer): void {
     "createGitHubIssue",
     "Create a new GitHub issue in a repository",
     CreateGithubIssueInput,
-    createGithubIssue
+    (input) => createGithubIssue(client, input)
   );
 
   registerTool(
@@ -50,7 +54,7 @@ export function registerGithubTools(server: McpServer): void {
     "updateGitHubIssue",
     "Update a GitHub issue — change title, body, state (open/close), labels, assignees, or milestone",
     UpdateGithubIssueInput,
-    updateGithubIssue
+    (input) => updateGithubIssue(client, input)
   );
 
   registerTool(
@@ -58,7 +62,7 @@ export function registerGithubTools(server: McpServer): void {
     "addCommentToGitHubIssue",
     "Add a comment to a GitHub issue",
     AddCommentToGithubIssueInput,
-    addCommentToGithubIssue
+    (input) => addCommentToGithubIssue(client, input)
   );
 
   registerTool(
@@ -66,6 +70,6 @@ export function registerGithubTools(server: McpServer): void {
     "getGitHubIssueComments",
     "Get comments on a GitHub issue with pagination support",
     GetGithubIssueCommentsInput,
-    getGithubIssueComments
+    (input) => getGithubIssueComments(client, input)
   );
 }

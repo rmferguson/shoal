@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { GitHubClient } from "../../github/client.js";
-import { getGitHubConfig } from "../../github/config.js";
 import { handleGitHubError } from "./errors.js";
 
 export const ListGithubIssuesInput = z.object({
@@ -33,9 +32,8 @@ interface GitHubIssueItem {
   html_url: string;
 }
 
-export async function listGithubIssues(input: ListGithubIssuesInput): Promise<unknown> {
+export async function listGithubIssues(client: GitHubClient, input: ListGithubIssuesInput): Promise<unknown> {
   const { owner, repo, state, labels, page, per_page } = input;
-  const client = new GitHubClient(getGitHubConfig());
 
   const params = new URLSearchParams({
     state,
