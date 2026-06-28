@@ -28,9 +28,8 @@ interface JiraTransitionsResponse {
   transitions: JiraTransition[];
 }
 
-export async function getJiraTransitions(input: GetTransitionsInput): Promise<unknown> {
+export async function getJiraTransitions(input: GetTransitionsInput, client: JiraClient): Promise<unknown> {
   const { issueKey } = input;
-  const client = new JiraClient();
 
   try {
     const data = await client.get<JiraTransitionsResponse>(

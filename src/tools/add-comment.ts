@@ -25,9 +25,8 @@ interface JiraCommentResponse {
   author: { displayName: string; accountId: string };
 }
 
-export async function addCommentToJiraIssue(input: AddCommentInput): Promise<unknown> {
+export async function addCommentToJiraIssue(input: AddCommentInput, client: JiraClient): Promise<unknown> {
   const { issueKey, body, mentions } = input;
-  const client = new JiraClient();
 
   try {
     const comment = await client.post<JiraCommentResponse>(

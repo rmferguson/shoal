@@ -17,9 +17,8 @@ interface JiraCommentResponse {
   author: { displayName: string; accountId: string };
 }
 
-export async function editJiraIssueComment(input: EditCommentInput): Promise<unknown> {
+export async function editJiraIssueComment(input: EditCommentInput, client: JiraClient): Promise<unknown> {
   const { issueKey, commentId, body } = input;
-  const client = new JiraClient();
 
   try {
     const comment = await client.put<JiraCommentResponse>(

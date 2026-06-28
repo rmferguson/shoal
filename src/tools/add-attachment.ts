@@ -23,9 +23,8 @@ interface AttachmentResponse {
   created: string;
 }
 
-export async function addAttachmentToJiraIssue(input: AddAttachmentInput): Promise<unknown> {
+export async function addAttachmentToJiraIssue(input: AddAttachmentInput, client: JiraClient): Promise<unknown> {
   const { issueKey, filename, content, mimeType } = input;
-  const client = new JiraClient();
 
   try {
     const buffer = Buffer.from(content, "base64");

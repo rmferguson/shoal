@@ -17,8 +17,7 @@ interface LinkTypesResponse {
   issueLinkTypes: LinkType[];
 }
 
-export async function getJiraIssueLinkTypes(): Promise<unknown> {
-  const client = new JiraClient();
+export async function getJiraIssueLinkTypes(client: JiraClient): Promise<unknown> {
 
   try {
     const data = await client.get<LinkTypesResponse>("/issueLinkType");

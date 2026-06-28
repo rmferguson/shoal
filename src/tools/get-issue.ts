@@ -19,9 +19,8 @@ interface JiraIssueResponse {
   fields: Record<string, unknown>;
 }
 
-export async function getJiraIssue(input: GetIssueInput): Promise<unknown> {
+export async function getJiraIssue(input: GetIssueInput, client: JiraClient): Promise<unknown> {
   const { issueKey, rawAdf = false } = input;
-  const client = new JiraClient();
 
   let issue: JiraIssueResponse;
   try {

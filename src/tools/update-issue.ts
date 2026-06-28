@@ -32,7 +32,7 @@ export const UpdateIssueInput = z.object({
 
 export type UpdateIssueInput = z.infer<typeof UpdateIssueInput>;
 
-export async function updateJiraIssue(input: UpdateIssueInput): Promise<unknown> {
+export async function updateJiraIssue(input: UpdateIssueInput, client: JiraClient): Promise<unknown> {
   const { issueKey, summary, description, priority, assigneeAccountId, labels, components, parent, customFields } = input;
 
   const fields: Record<string, unknown> = {};
@@ -49,7 +49,7 @@ export async function updateJiraIssue(input: UpdateIssueInput): Promise<unknown>
   if (customFields !== undefined) Object.assign(fields, customFields);
 
   try {
-    await new JiraClient().put<void>(
+    await client.put<void>(
       `/issue/${encodeURIComponent(issueKey.trim())}`,
       { fields }
     );

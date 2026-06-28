@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { manageJiraIssueLabels, ManageLabelsInput } from "../../tools/manage-labels.js";
 import { captureBody } from "../helpers.js";
+import { JiraClient } from "../../jira/client.js";
+
+const client = new JiraClient();
 
 beforeEach(() => vi.restoreAllMocks());
 
@@ -25,7 +28,7 @@ describe("ManageLabelsInput validation", () => {
 describe("manageJiraIssueLabels", () => {
   it("uses Jira update syntax, not fields syntax", async () => {
     const bodyPromise = captureBody();
-    await manageJiraIssueLabels({ issueKey: "T-1", add: ["bug"], remove: ["wontfix"] });
+    await manageJiraIssueLabels({ issueKey: "T-1", add: ["bug"], remove: ["wontfix"] }, client);
     const body = await bodyPromise;
     expect(body.update).toBeDefined();
     expect(body.fields).toBeUndefined();
@@ -33,7 +36,7 @@ describe("manageJiraIssueLabels", () => {
 
   it("builds separate add/remove ops", async () => {
     const bodyPromise = captureBody();
-    await manageJiraIssueLabels({ issueKey: "T-1", add: ["alpha", "beta"], remove: ["gamma"] });
+    await manageJiraIssueLabels({ issueKey: "T-1", add: ["alpha", "beta"], remove: ["gamma"] }, client);
     const body = await bodyPromise;
     const ops = (body.update as Record<string, unknown>).labels as unknown[];
     expect(ops).toContainEqual({ add: "alpha" });

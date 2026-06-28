@@ -28,7 +28,7 @@ export const CreateIssueInput = z.object({
 
 export type CreateIssueInput = z.infer<typeof CreateIssueInput>;
 
-export async function createJiraIssue(input: CreateIssueInput): Promise<unknown> {
+export async function createJiraIssue(input: CreateIssueInput, client: JiraClient): Promise<unknown> {
   const { projectKey, summary, issueType, description, assigneeAccountId, priority, labels, components, parent, epicName, customFields } = input;
 
   const fields: Record<string, unknown> = {
@@ -48,7 +48,7 @@ export async function createJiraIssue(input: CreateIssueInput): Promise<unknown>
 
   // Single POST — no retry (fixes #132 double-create).
   try {
-    const result = await new JiraClient().post<{ key: string; id: string; self: string }>(
+    const result = await client.post<{ key: string; id: string; self: string }>(
       "/issue",
       { fields }
     );

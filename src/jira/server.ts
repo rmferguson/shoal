@@ -1,4 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { JiraClient } from "./client.js";
 import { getJiraIssue, GetIssueInput } from "../tools/get-issue.js";
 import { searchJiraIssuesUsingJql, SearchIssuesInput } from "../tools/search-issues.js";
 import { createJiraIssue, CreateIssueInput } from "../tools/create-issue.js";
@@ -14,162 +16,149 @@ import { getJiraIssueComments, GetCommentsInput } from "../tools/get-comments.js
 import { createJiraIssueLink, CreateIssueLinkInput } from "../tools/create-issue-link.js";
 import { getJiraIssueLinkTypes, GetIssueLinkTypesInput } from "../tools/get-issue-link-types.js";
 
+function registerTool<TInput>(
+  server: McpServer,
+  name: string,
+  description: string,
+  schema: { shape: Record<string, z.ZodTypeAny>; parse(input: unknown): TInput },
+  handler: (input: TInput) => Promise<unknown>
+): void {
+  server.tool(name, description, schema.shape, async (args) => {
+    const result = await handler(schema.parse(args));
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+  });
+}
+
 export function registerJiraTools(server: McpServer): void {
-  server.tool(
+  const client = new JiraClient();
+
+  registerTool(
+    server,
     "getJiraIssue",
     "Fetch a Jira issue by key. Returns all fields including custom fields (story points, etc.). " +
       "Use rawAdf: true on media-heavy issues that hang.",
-    GetIssueInput.shape,
-    async (args) => {
-      const result = await getJiraIssue(GetIssueInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    GetIssueInput,
+    (input) => getJiraIssue(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "searchJiraIssuesUsingJql",
     "Search Jira issues using JQL. Returns paginated results. " +
       "Use nextPageToken from the response to fetch subsequent pages.",
-    SearchIssuesInput.shape,
-    async (args) => {
-      const result = await searchJiraIssuesUsingJql(SearchIssuesInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    SearchIssuesInput,
+    (input) => searchJiraIssuesUsingJql(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "createJiraIssue",
     "Create a Jira issue. Creates exactly one issue (no duplicates). " +
       "Specify components as names — they are serialized correctly. " +
       "Custom fields can be passed via customFields: { customfield_10016: 5 }.",
-    CreateIssueInput.shape,
-    async (args) => {
-      const result = await createJiraIssue(CreateIssueInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    CreateIssueInput,
+    (input) => createJiraIssue(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "getJiraTransitions",
     "List available workflow transitions for a Jira issue. " +
       "Call this before transitionJiraIssue to discover valid transition IDs and target statuses.",
-    GetTransitionsInput.shape,
-    async (args) => {
-      const result = await getJiraTransitions(GetTransitionsInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    GetTransitionsInput,
+    (input) => getJiraTransitions(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "addCommentToJiraIssue",
     "Add a comment to a Jira issue. Supports @mentions via proper ADF mention nodes " +
       "(fixes Atlassian bug #136 where mentions are downgraded to plain text).",
-    AddCommentInput.shape,
-    async (args) => {
-      const result = await addCommentToJiraIssue(AddCommentInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    AddCommentInput,
+    (input) => addCommentToJiraIssue(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "getJiraProjects",
     "List accessible Jira projects with pagination. " +
       "Use nextStartAt from the response to fetch subsequent pages.",
-    GetProjectsInput.shape,
-    async (args) => {
-      const result = await getJiraProjects(GetProjectsInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    GetProjectsInput,
+    (input) => getJiraProjects(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "transitionJiraIssue",
     "Move a Jira issue through its workflow states using a transition ID. " +
       "Call getJiraTransitions first to discover valid IDs. " +
       "Set clearResolution: true when reopening an issue to prevent transition errors (fixes Atlassian bug #85).",
-    TransitionIssueInput.shape,
-    async (args) => {
-      const result = await transitionJiraIssue(TransitionIssueInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    TransitionIssueInput,
+    (input) => transitionJiraIssue(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "updateJiraIssue",
     "Update fields on an existing Jira issue. " +
       "Supports summary, description (plain text auto-wrapped in ADF), priority, assignee, labels, components, and custom fields. " +
       "Only the fields you provide are changed — omitted fields are left untouched.",
-    UpdateIssueInput.shape,
-    async (args) => {
-      const result = await updateJiraIssue(UpdateIssueInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    UpdateIssueInput,
+    (input) => updateJiraIssue(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "editJiraIssueComment",
     "Edit an existing comment on a Jira issue. " +
       "Rewrites the comment body using ADF so formatting is preserved.",
-    EditCommentInput.shape,
-    async (args) => {
-      const result = await editJiraIssueComment(EditCommentInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    EditCommentInput,
+    (input) => editJiraIssueComment(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "manageJiraIssueLabels",
     "Add or remove labels on a Jira issue without needing the full current label set. " +
       "Provide add and/or remove arrays — only the specified labels are changed.",
-    ManageLabelsInputShape,
-    async (args) => {
-      const result = await manageJiraIssueLabels(ManageLabelsInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    { shape: ManageLabelsInputShape, parse: (args: unknown) => ManageLabelsInput.parse(args) },
+    (input) => manageJiraIssueLabels(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "addAttachmentToJiraIssue",
     "Attach a file to a Jira issue. " +
       "Provide base64-encoded file content along with the filename and optional MIME type.",
-    AddAttachmentInput.shape,
-    async (args) => {
-      const result = await addAttachmentToJiraIssue(AddAttachmentInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    AddAttachmentInput,
+    (input) => addAttachmentToJiraIssue(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "getJiraIssueComments",
     "Fetch comments on a Jira issue with pagination (fixes Atlassian gap #88). " +
       "Returns rendered plain text from ADF bodies. Use nextStartAt to page through results.",
-    GetCommentsInput.shape,
-    async (args) => {
-      const result = await getJiraIssueComments(GetCommentsInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    GetCommentsInput,
+    (input) => getJiraIssueComments(input, client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "getJiraIssueLinkTypes",
     "List all issue link types configured in this Jira instance (e.g. Blocks, Relates, Duplicate). " +
       "Call this before createJiraIssueLink to discover valid link type names.",
-    GetIssueLinkTypesInput.shape,
-    async (args) => {
-      const result = await getJiraIssueLinkTypes();
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    GetIssueLinkTypesInput,
+    (_input) => getJiraIssueLinkTypes(client)
   );
 
-  server.tool(
+  registerTool(
+    server,
     "createJiraIssueLink",
     "Create a link between two Jira issues (e.g. 'PROJ-1 blocks PROJ-2'). " +
       "Call getJiraIssueLinkTypes first to discover valid link type names for your instance. " +
       "The inward/outward distinction follows the link type's directional labels.",
-    CreateIssueLinkInput.shape,
-    async (args) => {
-      const result = await createJiraIssueLink(CreateIssueLinkInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    CreateIssueLinkInput,
+    (input) => createJiraIssueLink(input, client)
   );
 }
