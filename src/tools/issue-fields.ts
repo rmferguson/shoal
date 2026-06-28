@@ -16,7 +16,7 @@ export function extractIssueFields(fields: Record<string, unknown>): IssueFields
   const status = fields["status"] as { name?: string } | undefined;
   const assignee = fields["assignee"] as { displayName?: string } | undefined;
   const priority = fields["priority"] as { name?: string } | undefined;
-  const issuetype = fields["issuetype"] as { name?: string } | undefined;
+  const issueType = fields["issuetype"] as { name?: string } | undefined;
 
   const customFields: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(fields)) {
@@ -30,7 +30,7 @@ export function extractIssueFields(fields: Record<string, unknown>): IssueFields
     status: status?.name,
     assignee: assignee?.displayName,
     priority: priority?.name,
-    issueType: issuetype?.name,
+    issueType: issueType?.name,
     customFields,
   };
 }

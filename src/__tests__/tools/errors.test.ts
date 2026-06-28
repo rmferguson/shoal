@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { toToolError } from "../../tools/errors.js";
+import { toToolError } from "../../jira/errors.js";
 import { JiraError } from "../../jira/client.js";
 
 beforeEach(() => vi.restoreAllMocks());

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { JiraClient } from "../jira/client.js";
 import { plainTextToAdf } from "./adf-utils.js";
-import { toToolError } from "./errors.js";
+import { toToolError } from "../jira/errors.js";
 
 export const CreateIssueInput = z.object({
   projectKey: z.string().describe("Jira project key, e.g. PROJ"),

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { JiraClient } from "../jira/client.js";
 import { extractIssueFields } from "./issue-fields.js";
 import { renderAdf } from "./adf-utils.js";
-import { toToolError } from "./errors.js";
+import { toToolError } from "../jira/errors.js";
 
 export const GetIssueInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
