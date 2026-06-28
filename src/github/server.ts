@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { ListGithubIssuesInput, listGithubIssues } from "../tools/github/list-issues.js";
 import { GetGithubIssueInput, getGithubIssue } from "../tools/github/get-issue.js";
 import { CreateGithubIssueInput, createGithubIssue } from "../tools/github/create-issue.js";
@@ -6,64 +7,65 @@ import { UpdateGithubIssueInput, updateGithubIssue } from "../tools/github/updat
 import { AddCommentToGithubIssueInput, addCommentToGithubIssue } from "../tools/github/add-comment.js";
 import { GetGithubIssueCommentsInput, getGithubIssueComments } from "../tools/github/get-comments.js";
 
+function registerTool<TInput>(
+  server: McpServer,
+  name: string,
+  description: string,
+  schema: { shape: Record<string, z.ZodTypeAny>; parse(input: unknown): TInput },
+  handler: (input: TInput) => Promise<unknown>
+): void {
+  server.tool(name, description, schema.shape, async (args) => {
+    const result = await handler(schema.parse(args));
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+  });
+}
+
 export function registerGithubTools(server: McpServer): void {
-  server.tool(
-    "listGithubIssues",
+  registerTool(
+    server,
+    "listGitHubIssues",
     "List issues in a GitHub repository with optional filters for state, labels, and pagination",
-    ListGithubIssuesInput.shape,
-    async (args) => {
-      const result = await listGithubIssues(ListGithubIssuesInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    ListGithubIssuesInput,
+    listGithubIssues
   );
 
-  server.tool(
-    "getGithubIssue",
+  registerTool(
+    server,
+    "getGitHubIssue",
     "Get a specific GitHub issue by number, including body, labels, assignees, and metadata",
-    GetGithubIssueInput.shape,
-    async (args) => {
-      const result = await getGithubIssue(GetGithubIssueInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    GetGithubIssueInput,
+    getGithubIssue
   );
 
-  server.tool(
-    "createGithubIssue",
+  registerTool(
+    server,
+    "createGitHubIssue",
     "Create a new GitHub issue in a repository",
-    CreateGithubIssueInput.shape,
-    async (args) => {
-      const result = await createGithubIssue(CreateGithubIssueInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    CreateGithubIssueInput,
+    createGithubIssue
   );
 
-  server.tool(
-    "updateGithubIssue",
+  registerTool(
+    server,
+    "updateGitHubIssue",
     "Update a GitHub issue — change title, body, state (open/close), labels, assignees, or milestone",
-    UpdateGithubIssueInput.shape,
-    async (args) => {
-      const result = await updateGithubIssue(UpdateGithubIssueInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    UpdateGithubIssueInput,
+    updateGithubIssue
   );
 
-  server.tool(
-    "addCommentToGithubIssue",
+  registerTool(
+    server,
+    "addCommentToGitHubIssue",
     "Add a comment to a GitHub issue",
-    AddCommentToGithubIssueInput.shape,
-    async (args) => {
-      const result = await addCommentToGithubIssue(AddCommentToGithubIssueInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    AddCommentToGithubIssueInput,
+    addCommentToGithubIssue
   );
 
-  server.tool(
-    "getGithubIssueComments",
+  registerTool(
+    server,
+    "getGitHubIssueComments",
     "Get comments on a GitHub issue with pagination support",
-    GetGithubIssueCommentsInput.shape,
-    async (args) => {
-      const result = await getGithubIssueComments(GetGithubIssueCommentsInput.parse(args));
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    }
+    GetGithubIssueCommentsInput,
+    getGithubIssueComments
   );
 }
