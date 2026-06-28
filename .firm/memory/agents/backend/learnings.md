@@ -16,6 +16,8 @@
 ## Codebase Patterns (GitHub)
 - `src/github/config.ts` uses a named `REQUEST_TIMEOUT_MS` constant and a `buildConfig(token)` helper — both `getGitHubConfig` and `tryGetGitHubConfig` delegate to it (added: 2026-06-27, dispatch: sprint-github-refactor)
 - `GitHubClient` callers are the 6 tool files under `src/tools/github/`, not `src/github/server.ts` — `server.ts` only registers tools, it does not instantiate the client (added: 2026-06-27, dispatch: sprint-github-refactor)
+- `src/github/server.ts` uses a `registerTool<TInput>` helper with structural typing for the schema param — pass the ZodObject directly; the helper calls `.shape` and `.parse` internally (added: 2026-06-27, dispatch: sprint-github-refactor)
+- MCP tool name strings in `src/github/server.ts` use `GitHub` casing (e.g. `listGitHubIssues`); TypeScript function names in `src/tools/github/*.ts` still use `Github` casing — intentionally separate namespaces (added: 2026-06-27, dispatch: sprint-github-refactor)
 
 ## Cross-Agent Notes
 - (none yet)
