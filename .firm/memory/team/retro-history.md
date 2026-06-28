@@ -1,5 +1,11 @@
 # Retrospective History
 
+## Retro: 2026-06-27 (session 4)
+- Tasks completed: 5 (parallel worktree sprint — all refactor)
+- New learnings: 11 across 2 members (backend: 10, tester: 1)
+- Pruned/archived: 0
+- Key insight: Provider-specific error layers (`src/jira/errors.ts`, `src/tools/github/errors.ts`) emerged naturally from the errors.ts decoupling task — the pattern was implied by the architecture, not planned
+
 ## Retro: 2026-06-27 (session 3)
 - Tasks completed: 0 (test-after pass + infrastructure fix)
 - New learnings: 2 added to project memory
