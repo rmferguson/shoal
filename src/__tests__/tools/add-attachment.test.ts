@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { addAttachmentToJiraIssue } from "../../tools/add-attachment.js";
+import { addAttachmentToJiraIssue, AddAttachmentInput } from "../../tools/add-attachment.js";
 import { JiraClient } from "../../jira/client.js";
 
 const client = new JiraClient();
@@ -28,7 +28,7 @@ describe("addAttachmentToJiraIssue", () => {
     vi.stubGlobal("fetch", mockFetch([mockAttachment]));
 
     const result = (await addAttachmentToJiraIssue(
-      { issueKey: "TEST-1", filename: "test.txt", content: base64Hello },
+      AddAttachmentInput.parse({ issueKey: "TEST-1", filename: "test.txt", content: base64Hello }),
       client
     )) as Array<Record<string, unknown>>;
 
@@ -55,7 +55,7 @@ describe("addAttachmentToJiraIssue", () => {
     );
 
     await addAttachmentToJiraIssue(
-      { issueKey: "PROJ-42", filename: "file.txt", content: base64Hello },
+      AddAttachmentInput.parse({ issueKey: "PROJ-42", filename: "file.txt", content: base64Hello }),
       client
     );
     expect(capturedUrl).toContain("/PROJ-42/attachments");
@@ -76,7 +76,7 @@ describe("addAttachmentToJiraIssue", () => {
     );
 
     await addAttachmentToJiraIssue(
-      { issueKey: "TEST-1", filename: "data.txt", content: base64Hello },
+      AddAttachmentInput.parse({ issueKey: "TEST-1", filename: "data.txt", content: base64Hello }),
       client
     );
     expect(capturedInit?.body).toBeInstanceOf(FormData);
@@ -92,7 +92,7 @@ describe("addAttachmentToJiraIssue", () => {
     );
 
     const result = (await addAttachmentToJiraIssue(
-      { issueKey: "TEST-1", filename: "a.txt", content: base64Hello },
+      AddAttachmentInput.parse({ issueKey: "TEST-1", filename: "a.txt", content: base64Hello }),
       client
     )) as Array<Record<string, unknown>>;
 
@@ -116,7 +116,7 @@ describe("addAttachmentToJiraIssue", () => {
     );
 
     const result = (await addAttachmentToJiraIssue(
-      { issueKey: "TEST-1", filename: "f.bin", content: base64Hello },
+      AddAttachmentInput.parse({ issueKey: "TEST-1", filename: "f.bin", content: base64Hello }),
       client
     )) as Array<Record<string, unknown>>;
 
@@ -139,7 +139,7 @@ describe("addAttachmentToJiraIssue", () => {
     );
 
     await addAttachmentToJiraIssue(
-      { issueKey: "TEST-1", filename: "test.txt", content: base64Hello },
+      AddAttachmentInput.parse({ issueKey: "TEST-1", filename: "test.txt", content: base64Hello }),
       client
     );
     expect(capturedHeaders?.["X-Atlassian-Token"]).toBe("no-check");
