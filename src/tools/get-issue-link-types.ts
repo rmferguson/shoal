@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { JiraClient } from "../jira/client.js";
-import { toToolError } from "./errors.js";
+import { toToolError } from "../jira/errors.js";
 
 export const GetIssueLinkTypesInput = z.object({});
 

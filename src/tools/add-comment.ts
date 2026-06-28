@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { JiraClient } from "../jira/client.js";
 import { buildAdfWithMentions } from "./adf-utils.js";
-import { toToolError } from "./errors.js";
+import { toToolError } from "../jira/errors.js";
 
 export const AddCommentInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),

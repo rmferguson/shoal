@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { JiraClient } from "../jira/client.js";
 import { extractIssueFields } from "./issue-fields.js";
-import { toToolError } from "./errors.js";
+import { toToolError } from "../jira/errors.js";
 
 export const SearchIssuesInput = z.object({
   jql: z.string().describe("JQL query string, e.g. 'project = PROJ AND status = Open'"),

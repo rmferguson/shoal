@@ -2,7 +2,7 @@ import { z } from "zod";
 import { JiraClient } from "../jira/client.js";
 import { nextStartAt } from "./pagination.js";
 import { renderAdf } from "./adf-utils.js";
-import { toToolError } from "./errors.js";
+import { toToolError } from "../jira/errors.js";
 
 export const GetCommentsInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -47,14 +47,14 @@ export async function getJiraIssueComments(input: GetCommentsInput): Promise<unk
     );
 
     const returned = data.comments.length;
-    const next = nextStartAt(startAt, returned, data.total);
+    const nextOffset = nextStartAt(startAt, returned, data.total);
 
     return {
       total: data.total,
       startAt: data.startAt,
       maxResults: data.maxResults,
       returned,
-      nextStartAt: next,
+      nextStartAt: nextOffset,
       comments: data.comments.map((comment) => ({
         id: comment.id,
         author: { displayName: comment.author.displayName, accountId: comment.author.accountId },
