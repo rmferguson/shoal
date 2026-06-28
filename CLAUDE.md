@@ -115,16 +115,15 @@ npm start            # run compiled server
 
 ## Issue tracker
 
-This project uses **bd** (beads) for issue tracking. All work is under the `moth-meg` epic.
+This project uses **GitHub Issues** (https://github.com/rmferguson/shoal/issues).
 
 ```bash
-bd children moth-meg     # See all remaining work
-bd ready                 # See what's available to pick up
-bd show <id>             # View issue details
-bd close <id>            # Complete work
+gh issue list             # See all open issues
+gh issue view <number>    # View issue details
+gh issue close <number>   # Complete work
 ```
 
-Do not use TodoWrite, TaskCreate, or markdown TODO lists. Use `bd` only.
+Do not use TodoWrite, TaskCreate, or markdown TODO lists. Use `gh` only.
 
 ---
 
