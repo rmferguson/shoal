@@ -5,7 +5,7 @@ import { handleGitHubError } from "./errors.js";
 export const GetGithubIssueInput = z.object({
   owner: z.string().describe("GitHub repository owner (user or organization)"),
   repo: z.string().describe("GitHub repository name"),
-  issue_number: z.number().int().min(1).describe("Issue number"),
+  issueNumber: z.number().int().min(1).describe("Issue number"),
 });
 
 export type GetGithubIssueInput = z.infer<typeof GetGithubIssueInput>;
@@ -38,11 +38,11 @@ interface GitHubIssueDetail {
 }
 
 export async function getGithubIssue(client: GitHubClient, input: GetGithubIssueInput): Promise<unknown> {
-  const { owner, repo, issue_number } = input;
+  const { owner, repo, issueNumber } = input;
 
   try {
     const issue = await client.get<GitHubIssueDetail>(
-      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issue_number}`
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}`
     );
 
     return {

@@ -5,7 +5,7 @@ import { handleGitHubError } from "./errors.js";
 export const AddCommentToGithubIssueInput = z.object({
   owner: z.string().describe("GitHub repository owner (user or organization)"),
   repo: z.string().describe("GitHub repository name"),
-  issue_number: z.number().int().min(1).describe("Issue number to comment on"),
+  issueNumber: z.number().int().min(1).describe("Issue number to comment on"),
   body: z.string().min(1).describe("Comment body (markdown supported)"),
 });
 
@@ -23,11 +23,11 @@ interface GitHubComment {
 }
 
 export async function addCommentToGithubIssue(client: GitHubClient, input: AddCommentToGithubIssueInput): Promise<unknown> {
-  const { owner, repo, issue_number, body } = input;
+  const { owner, repo, issueNumber, body } = input;
 
   try {
     const comment = await client.post<GitHubComment>(
-      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issue_number}/comments`,
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/comments`,
       { body }
     );
 

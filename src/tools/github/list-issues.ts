@@ -8,7 +8,7 @@ export const ListGithubIssuesInput = z.object({
   state: z.enum(["open", "closed", "all"]).default("open").describe("Filter issues by state"),
   labels: z.string().optional().describe("Comma-separated list of label names to filter by"),
   page: z.number().int().min(1).default(1).describe("Page number for pagination"),
-  per_page: z.number().int().min(1).max(100).default(30).describe("Number of issues per page (max 100)"),
+  perPage: z.number().int().min(1).max(100).default(30).describe("Number of issues per page (max 100)"),
 });
 
 export type ListGithubIssuesInput = z.infer<typeof ListGithubIssuesInput>;
@@ -33,12 +33,12 @@ interface GitHubIssueItem {
 }
 
 export async function listGithubIssues(client: GitHubClient, input: ListGithubIssuesInput): Promise<unknown> {
-  const { owner, repo, state, labels, page, per_page } = input;
+  const { owner, repo, state, labels, page, perPage } = input;
 
   const params = new URLSearchParams({
     state,
     page: String(page),
-    per_page: String(per_page),
+    per_page: String(perPage),
   });
   if (labels) params.set("labels", labels);
 
