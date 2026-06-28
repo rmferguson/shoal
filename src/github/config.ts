@@ -3,21 +3,25 @@ export interface GitHubConfig {
   requestTimeoutMs: number;
 }
 
-const required = (name: string): string => {
+const REQUEST_TIMEOUT_MS = 10_000;
+
+const requireEnv = (name: string): string => {
   const val = process.env[name];
   if (!val) throw new Error(`Missing required environment variable: ${name}`);
   return val;
 };
 
+const buildConfig = (token: string): GitHubConfig => ({
+  token,
+  requestTimeoutMs: REQUEST_TIMEOUT_MS,
+});
+
 export function getGitHubConfig(): GitHubConfig {
-  return {
-    token: required("GITHUB_TOKEN"),
-    requestTimeoutMs: 10_000,
-  };
+  return buildConfig(requireEnv("GITHUB_TOKEN"));
 }
 
 export function tryGetGitHubConfig(): GitHubConfig | null {
   const token = process.env["GITHUB_TOKEN"];
   if (!token) return null;
-  return { token, requestTimeoutMs: 10_000 };
+  return buildConfig(token);
 }
