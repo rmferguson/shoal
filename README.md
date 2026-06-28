@@ -1,6 +1,6 @@
-# Shoal — Jira & GitHub Issues MCP Server
+# Shoal — Jira MCP Server
 
-A local MCP server for Jira and GitHub Issues that works correctly. The Jira provider is built as a quality alternative to Atlassian's official server, which has unfixed bugs in issue creation, pagination, custom fields, and comment handling.
+A local MCP server for Jira that works correctly. Built as a quality alternative to Atlassian's official server, which has unfixed bugs in issue creation, pagination, custom fields, and comment handling.
 
 ## What's fixed
 
@@ -26,12 +26,6 @@ A local MCP server for Jira and GitHub Issues that works correctly. The Jira pro
 
 Full parameter reference: [docs/tools.md](docs/tools.md)
 
-### GitHub Issues
-
-`listGithubIssues`, `getGithubIssue`, `createGithubIssue`, `updateGithubIssue`, `addCommentToGithubIssue`, `getGithubIssueComments`.
-
-`owner` and `repo` are per-call parameters on every tool — no global default required.
-
 ---
 
 ## Documentation
@@ -46,12 +40,9 @@ Full parameter reference: [docs/tools.md](docs/tools.md)
 ## Requirements
 
 - Node.js 22+
-- **Jira**: An Atlassian API token — generate one at [id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
-- **GitHub Issues**: A GitHub personal access token (classic or fine-grained) with Issues read/write scope
+- An Atlassian API token — generate one at [id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
 
 ## Setup
-
-### Jira
 
 #### Claude Code
 
@@ -84,38 +75,6 @@ Use the same config format with the appropriate client's MCP server section.
 | `JIRA_SITE_URL` | Yes | Your Jira instance URL, e.g. `https://yourorg.atlassian.net` |
 | `ATLASSIAN_USER_EMAIL` | Yes | Email address for your Atlassian account |
 | `ATLASSIAN_API_TOKEN` | Yes | API token from id.atlassian.com |
-
-### GitHub Issues
-
-#### Claude Code
-
-Add to your MCP config (`.claude/mcp.json` or via `claude mcp add`):
-
-```json
-{
-  "mcpServers": {
-    "shoal-github": {
-      "command": "npx",
-      "args": ["-y", "-p", "@aquarium-tools/shoal", "shoal-github"],
-      "env": {
-        "GITHUB_TOKEN": "your-token-here"
-      }
-    }
-  }
-}
-```
-
-#### Other MCP clients
-
-Use the same config format with the appropriate client's MCP server section.
-
-#### Environment variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GITHUB_TOKEN` | Yes | Personal access token (classic or fine-grained) with Issues read/write scope |
-
-`owner` and `repo` are passed as parameters on each tool call — no environment variable needed for them.
 
 ## Running from source
 
