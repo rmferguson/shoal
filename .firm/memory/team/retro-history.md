@@ -23,3 +23,9 @@
 - New learnings: 4 seeded across 4 members (architect, backend, tester, technical-writer)
 - Pruned/archived: 0
 - Key insight: Existing team.yaml reflected an abandoned hosted-server vision; the current codebase is a local stdio server with two providers (Jira + GitHub)
+
+## Retro: 2026-07-02
+- Tasks completed: 0 team-member tasks (session was orchestrator + devops/Explore agents, no team.yaml members dispatched)
+- New learnings: 2 project memory files updated (project-evolution.md refreshed for the GitHub Issues revert, npm-publishing.md added), 2 workflow patterns added
+- Pruned/archived: 0
+- Key insight: v1.0.0 published to npm and github.com/rmferguson/shoal made public; the GitHub Issues revert had left collateral staleness (duplicate entrypoint, stale dist/, stale CHANGELOG, stale architect learnings, stale repo description) that had to be swept before publish
