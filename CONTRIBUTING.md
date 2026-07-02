@@ -37,6 +37,10 @@ These are intentional and should not be changed without discussion:
 - **ADF for all write operations** — plain text bodies are rejected by Jira or strip @mentions. Always wrap in `doc > paragraph > text`.
 - **Components as objects** — `[{ name: "..." }]`, not plain strings.
 
+## Releasing
+
+Maintainer-only. See [docs/npm-publishing.md](docs/npm-publishing.md) for the npm publish checklist and the OIDC trusted-publishing setup used by `.github/workflows/publish.yml`.
+
 ## License
 
 By contributing, you agree your contributions will be licensed under the [Apache 2.0 License](LICENSE).
