@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [1.0.0] - 2026-06-27
+## [1.0.0] - 2026-07-02
 
 ### Added — Jira tools
 
@@ -22,15 +22,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `getJiraIssueLinkTypes` — list available issue link types
 - `createJiraIssueLink` — link two issues together
 - `getJiraProjects` — list accessible Jira projects
-
-### Added — GitHub Issues tools
-
-- `listGithubIssues` — list issues with filters for state, labels, and pagination
-- `getGithubIssue` — fetch a single issue by number
-- `createGithubIssue` — create a new issue in a repository
-- `updateGithubIssue` — update title, body, state, labels, assignees, or milestone
-- `addCommentToGithubIssue` — add a comment to an issue
-- `getGithubIssueComments` — fetch comments on an issue with pagination
 
 ### Fixed — Atlassian official server bugs
 
