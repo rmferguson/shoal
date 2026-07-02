@@ -1,8 +1,8 @@
 # Learnings: architect
 
 ## Codebase Patterns
-- Project has two independent providers: Jira (Atlassian REST API v3) and GitHub Issues, each with their own client, config, and server files under `src/jira/` and `src/github/`
-- Entry points are split: `src/index.ts` (combined), `src/index-jira.ts`, `src/index-github.ts`
+- Project is Jira-only (Atlassian REST API v3); a GitHub Issues provider was built and reverted (2026-06-30) — do not reintroduce `src/github/` without an explicit decision to re-add that provider
+- Single entry point: `src/index.ts`, single bin command `shoal`
 - The spec (`shoal-jira-spec.md`) is the authoritative design reference for Jira behavior
 
 ## Gotchas
