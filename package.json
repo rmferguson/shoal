@@ -6,8 +6,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "shoal": "dist/index.js",
-    "shoal-jira": "dist/index-jira.js"
+    "shoal": "dist/index.js"
   },
   "files": [
     "dist/"
@@ -15,9 +14,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "dev:jira": "tsx src/index-jira.ts",
     "start": "node dist/index.js",
-    "start:jira": "node dist/index-jira.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepublishOnly": "npm run build"
