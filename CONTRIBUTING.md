@@ -20,14 +20,13 @@ Bug reports and feature requests go in [GitHub Issues](https://github.com/rmferg
 ## Development
 
 ```bash
-npm run dev          # run Jira server from source
-npm run dev:github   # run GitHub server from source
+npm run dev          # run the server from source
 npm test             # run test suite (Vitest)
 npm run typecheck    # type-check without building
 npm run build        # compile to dist/
 ```
 
-Tests use Vitest and mock the HTTP layer — no live Jira or GitHub credentials needed.
+Tests use Vitest and mock the HTTP layer — no live Jira credentials needed.
 
 ## Design constraints
 
