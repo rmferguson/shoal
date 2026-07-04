@@ -20,29 +20,35 @@ const adfBody = (text: string) => ({
   content: [{ type: "paragraph", content: [{ type: "text", text }] }],
 });
 
+function jsonResponse(body: unknown, status = 200, ok = true) {
+  return {
+    ok,
+    status,
+    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(JSON.stringify(body)),
+  };
+}
+
 describe("getJiraIssueComments", () => {
   it("maps comments from response", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            total: 1,
-            startAt: 0,
-            maxResults: 25,
-            comments: [
-              {
-                id: "100",
-                author: { displayName: "Alice", accountId: "acc-1" },
-                created: "2026-01-01",
-                updated: "2026-01-02",
-                body: adfBody("Hello"),
-              },
-            ],
-          }),
-      })
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          total: 1,
+          startAt: 0,
+          maxResults: 25,
+          comments: [
+            {
+              id: "100",
+              author: { displayName: "Alice", accountId: "acc-1" },
+              created: "2026-01-01",
+              updated: "2026-01-02",
+              body: adfBody("Hello"),
+            },
+          ],
+        })
+      )
     );
 
     const result = (await getJiraIssueComments(
@@ -63,25 +69,22 @@ describe("getJiraIssueComments", () => {
   it("renders ADF body to plain text", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            total: 1,
-            startAt: 0,
-            maxResults: 25,
-            comments: [
-              {
-                id: "1",
-                author: { displayName: "Carol", accountId: "c" },
-                created: "2026-01-01",
-                updated: "2026-01-01",
-                body: adfBody("rendered text"),
-              },
-            ],
-          }),
-      })
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          total: 1,
+          startAt: 0,
+          maxResults: 25,
+          comments: [
+            {
+              id: "1",
+              author: { displayName: "Carol", accountId: "c" },
+              created: "2026-01-01",
+              updated: "2026-01-01",
+              body: adfBody("rendered text"),
+            },
+          ],
+        })
+      )
     );
 
     const result = (await getJiraIssueComments(
@@ -95,17 +98,14 @@ describe("getJiraIssueComments", () => {
   it("includes nextStartAt when more results exist", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            total: 50,
-            startAt: 0,
-            maxResults: 25,
-            comments: Array.from({ length: 25 }, (_, i) => makeComment(i)),
-          }),
-      })
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          total: 50,
+          startAt: 0,
+          maxResults: 25,
+          comments: Array.from({ length: 25 }, (_, i) => makeComment(i)),
+        })
+      )
     );
 
     const result = (await getJiraIssueComments(
@@ -118,17 +118,14 @@ describe("getJiraIssueComments", () => {
   it("returns null nextStartAt on last page", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            total: 3,
-            startAt: 0,
-            maxResults: 25,
-            comments: Array.from({ length: 3 }, (_, i) => makeComment(i)),
-          }),
-      })
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          total: 3,
+          startAt: 0,
+          maxResults: 25,
+          comments: Array.from({ length: 3 }, (_, i) => makeComment(i)),
+        })
+      )
     );
 
     const result = (await getJiraIssueComments(
@@ -144,12 +141,9 @@ describe("getJiraIssueComments", () => {
       "fetch",
       vi.fn().mockImplementation((url: string) => {
         capturedUrl = url;
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () =>
-            Promise.resolve({ total: 0, startAt: 0, maxResults: 100, comments: [] }),
-        });
+        return Promise.resolve(
+          jsonResponse({ total: 0, startAt: 0, maxResults: 100, comments: [] })
+        );
       })
     );
 
@@ -163,12 +157,9 @@ describe("getJiraIssueComments", () => {
       "fetch",
       vi.fn().mockImplementation((url: string) => {
         capturedUrl = url;
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () =>
-            Promise.resolve({ total: 0, startAt: 0, maxResults: 25, comments: [] }),
-        });
+        return Promise.resolve(
+          jsonResponse({ total: 0, startAt: 0, maxResults: 25, comments: [] })
+        );
       })
     );
 

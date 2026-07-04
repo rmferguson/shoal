@@ -6,21 +6,27 @@ const client = new JiraClient();
 
 beforeEach(() => vi.restoreAllMocks());
 
+function jsonResponse(body: unknown, status = 200, ok = true) {
+  return {
+    ok,
+    status,
+    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(JSON.stringify(body)),
+  };
+}
+
 describe("getJiraIssueLinkTypes", () => {
   it("returns mapped link types from response", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            issueLinkTypes: [
-              { id: "10001", name: "Blocks", inward: "is blocked by", outward: "blocks" },
-              { id: "10002", name: "Relates", inward: "relates to", outward: "relates to" },
-            ],
-          }),
-      })
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          issueLinkTypes: [
+            { id: "10001", name: "Blocks", inward: "is blocked by", outward: "blocks" },
+            { id: "10002", name: "Relates", inward: "relates to", outward: "relates to" },
+          ],
+        })
+      )
     );
 
     const result = (await getJiraIssueLinkTypes(client)) as Record<string, unknown>;
@@ -33,14 +39,7 @@ describe("getJiraIssueLinkTypes", () => {
   });
 
   it("returns empty linkTypes array when none exist", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ issueLinkTypes: [] }),
-      })
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ issueLinkTypes: [] })));
 
     const result = (await getJiraIssueLinkTypes(client)) as Record<string, unknown>;
     expect((result.linkTypes as unknown[]).length).toBe(0);
@@ -49,21 +48,18 @@ describe("getJiraIssueLinkTypes", () => {
   it("maps all four link type fields", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            issueLinkTypes: [
-              {
-                id: "42",
-                name: "Cloners",
-                inward: "is cloned by",
-                outward: "clones",
-              },
-            ],
-          }),
-      })
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          issueLinkTypes: [
+            {
+              id: "42",
+              name: "Cloners",
+              inward: "is cloned by",
+              outward: "clones",
+            },
+          ],
+        })
+      )
     );
 
     const result = (await getJiraIssueLinkTypes(client)) as Record<string, unknown>;
@@ -80,11 +76,7 @@ describe("getJiraIssueLinkTypes", () => {
       "fetch",
       vi.fn().mockImplementation((url: string) => {
         capturedUrl = url;
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ issueLinkTypes: [] }),
-        });
+        return Promise.resolve(jsonResponse({ issueLinkTypes: [] }));
       })
     );
 

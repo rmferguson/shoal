@@ -35,17 +35,18 @@ describe("editJiraIssueComment", () => {
   });
 
   it("returns id, updated, and author from response", async () => {
+    const responseBody = {
+      id: "100",
+      updated: "2026-06-27",
+      author: { displayName: "Alice", accountId: "acc-1" },
+    };
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: () =>
-          Promise.resolve({
-            id: "100",
-            updated: "2026-06-27",
-            author: { displayName: "Alice", accountId: "acc-1" },
-          }),
+        json: () => Promise.resolve(responseBody),
+        text: () => Promise.resolve(JSON.stringify(responseBody)),
       })
     );
 
@@ -66,15 +67,16 @@ describe("editJiraIssueComment", () => {
       "fetch",
       vi.fn().mockImplementation((url: string) => {
         capturedUrl = url;
+        const responseBody = {
+          id: "999",
+          updated: "2026-06-27",
+          author: { displayName: "Bob", accountId: "b" },
+        };
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () =>
-            Promise.resolve({
-              id: "999",
-              updated: "2026-06-27",
-              author: { displayName: "Bob", accountId: "b" },
-            }),
+          json: () => Promise.resolve(responseBody),
+          text: () => Promise.resolve(JSON.stringify(responseBody)),
         });
       })
     );

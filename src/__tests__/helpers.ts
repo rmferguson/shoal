@@ -14,17 +14,18 @@ export function captureBody(): Promise<Record<string, unknown>> {
       "fetch",
       vi.fn().mockImplementation((_url: string, init: RequestInit) => {
         resolve(JSON.parse(init.body as string));
+        const responseBody = {
+          id: "1",
+          created: "2026-01-01",
+          author: { displayName: "A", accountId: "abc" },
+          key: "T-1",
+          self: "url",
+        };
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () =>
-            Promise.resolve({
-              id: "1",
-              created: "2026-01-01",
-              author: { displayName: "A", accountId: "abc" },
-              key: "T-1",
-              self: "url",
-            }),
+          json: () => Promise.resolve(responseBody),
+          text: () => Promise.resolve(JSON.stringify(responseBody)),
         });
       })
     );
