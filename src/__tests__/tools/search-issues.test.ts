@@ -7,10 +7,12 @@ const client = new JiraClient();
 beforeEach(() => vi.restoreAllMocks());
 
 function stubSearch(issues: unknown[], isLast = true, nextPageToken?: string) {
+  const responseBody = { isLast, nextPageToken, issues };
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
     ok: true,
     status: 200,
-    json: () => Promise.resolve({ isLast, nextPageToken, issues }),
+    json: () => Promise.resolve(responseBody),
+    text: () => Promise.resolve(JSON.stringify(responseBody)),
   }));
 }
 

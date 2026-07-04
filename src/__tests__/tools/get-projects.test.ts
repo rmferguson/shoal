@@ -14,24 +14,30 @@ const makeProject = (i: number) => ({
   style: "next-gen",
 });
 
+function jsonResponse(body: unknown, status = 200, ok = true) {
+  return {
+    ok,
+    status,
+    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(JSON.stringify(body)),
+  };
+}
+
 describe("getJiraProjects", () => {
   it("returns mapped projects from response", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            total: 2,
-            startAt: 0,
-            maxResults: 50,
-            values: [
-              { id: "10000", key: "PROJ", name: "My Project", projectTypeKey: "software", style: "next-gen" },
-              { id: "10001", key: "OPS", name: "Operations", projectTypeKey: "business", style: "classic" },
-            ],
-          }),
-      })
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          total: 2,
+          startAt: 0,
+          maxResults: 50,
+          values: [
+            { id: "10000", key: "PROJ", name: "My Project", projectTypeKey: "software", style: "next-gen" },
+            { id: "10001", key: "OPS", name: "Operations", projectTypeKey: "business", style: "classic" },
+          ],
+        })
+      )
     );
 
     const result = (await getJiraProjects(
@@ -51,17 +57,14 @@ describe("getJiraProjects", () => {
   it("returns nextStartAt when more results exist", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            total: 10,
-            startAt: 0,
-            maxResults: 5,
-            values: Array.from({ length: 5 }, (_, i) => makeProject(i)),
-          }),
-      })
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          total: 10,
+          startAt: 0,
+          maxResults: 5,
+          values: Array.from({ length: 5 }, (_, i) => makeProject(i)),
+        })
+      )
     );
 
     const result = (await getJiraProjects(
@@ -74,17 +77,14 @@ describe("getJiraProjects", () => {
   it("returns null nextStartAt when on the last page", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            total: 7,
-            startAt: 5,
-            maxResults: 5,
-            values: Array.from({ length: 2 }, (_, i) => makeProject(5 + i)),
-          }),
-      })
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          total: 7,
+          startAt: 5,
+          maxResults: 5,
+          values: Array.from({ length: 2 }, (_, i) => makeProject(5 + i)),
+        })
+      )
     );
 
     const result = (await getJiraProjects(
@@ -100,12 +100,9 @@ describe("getJiraProjects", () => {
       "fetch",
       vi.fn().mockImplementation((url: string) => {
         capturedUrl = url;
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () =>
-            Promise.resolve({ total: 0, startAt: 10, maxResults: 20, values: [] }),
-        });
+        return Promise.resolve(
+          jsonResponse({ total: 0, startAt: 10, maxResults: 20, values: [] })
+        );
       })
     );
 
@@ -117,25 +114,22 @@ describe("getJiraProjects", () => {
   it("maps all project fields", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            total: 1,
-            startAt: 0,
-            maxResults: 50,
-            values: [
-              {
-                id: "42",
-                key: "DEMO",
-                name: "Demo",
-                projectTypeKey: "business",
-                style: "classic",
-              },
-            ],
-          }),
-      })
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          total: 1,
+          startAt: 0,
+          maxResults: 50,
+          values: [
+            {
+              id: "42",
+              key: "DEMO",
+              name: "Demo",
+              projectTypeKey: "business",
+              style: "classic",
+            },
+          ],
+        })
+      )
     );
 
     const result = (await getJiraProjects(

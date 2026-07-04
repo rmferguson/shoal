@@ -12,6 +12,7 @@ function stubCreate(response = { key: "TEST-1", id: "10001", self: "https://test
     ok: true,
     status: 201,
     json: () => Promise.resolve(response),
+    text: () => Promise.resolve(JSON.stringify(response)),
   }));
 }
 
