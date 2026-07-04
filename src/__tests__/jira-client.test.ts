@@ -39,8 +39,25 @@ describe("JiraClient", () => {
   });
 
   it("returns undefined on 204", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 204 }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 204, text: () => Promise.resolve("") })
+    );
     const result = await new JiraClient().put("/issue/TEST-1", {});
+    expect(result).toBeUndefined();
+  });
+
+  it("returns undefined on 201 with an empty body (e.g. issueLink creation)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 201,
+        statusText: "Created",
+        text: () => Promise.resolve(""),
+      })
+    );
+    const result = await new JiraClient().post("/issueLink", {});
     expect(result).toBeUndefined();
   });
 

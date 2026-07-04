@@ -91,6 +91,7 @@ describe("createJiraIssueLink", () => {
         return Promise.resolve({
           ok: true,
           status: 204,
+          text: () => Promise.resolve(""),
         });
       })
     );
@@ -100,5 +101,24 @@ describe("createJiraIssueLink", () => {
       client
     );
     expect(capturedUrl).toContain("/issueLink");
+  });
+
+  it("succeeds when Jira returns 201 Created with an empty body (actual issueLink response shape)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 201,
+        statusText: "Created",
+        text: () => Promise.resolve(""),
+      })
+    );
+
+    const result = (await createJiraIssueLink(
+      { linkType: "Blocks", inwardIssueKey: "TEST-1", outwardIssueKey: "TEST-2" },
+      client
+    )) as Record<string, unknown>;
+
+    expect(result.success).toBe(true);
   });
 });

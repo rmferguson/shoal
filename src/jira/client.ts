@@ -53,8 +53,9 @@ export class JiraClient {
 
     await this.checkResponse(response, path);
 
-    if (response.status === 204) return undefined as T;
-    return response.json() as Promise<T>;
+    const text = await response.text();
+    if (text.length === 0) return undefined as T;
+    return JSON.parse(text) as T;
   }
 
   get<T>(path: string): Promise<T> {
