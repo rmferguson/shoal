@@ -1,5 +1,11 @@
 # Retrospective History
 
+## Retro: 2026-07-04
+- Tasks completed: 1 (/implement single-task dispatch — empty-body JSON parse fix in JiraClient)
+- New learnings: 3 to backend (Codebase Patterns 1, Gotchas 1, Preferences 1), 2 to project MEMORY.md, 1 to docs/jira-api.md
+- Pruned/archived: 0
+- Key insight: JiraClient.request<T>() gated empty-body handling on status===204 only; Jira's POST /rest/api/3/issueLink returns 201 with an empty body, so the check never caught it — the bug was 100% reproducible on every successful link creation, not intermittent as an external consuming project's memory had assumed
+
 ## Retro: 2026-06-27 (session 4)
 - Tasks completed: 5 (parallel worktree sprint — all refactor)
 - New learnings: 11 across 2 members (backend: 10, tester: 1)
