@@ -119,3 +119,7 @@ Jira has two different ways to relate issues:
 **Parent** (`parent: { key }`) is a structural hierarchy: a child issue nested inside a parent epic. This is the relationship you want for epics. See `jira-epics.md` for details.
 
 These are different API calls and different data models. Do not use issue links to model epic relationships.
+
+### Empty body on link creation
+
+`POST /rest/api/3/issueLink` returns **201 Created with an empty response body** — not 204, and not a JSON payload. This is documented Atlassian behavior: "this resource returns nothing on the creation of an issue link." A client that gates empty-body handling on `status === 204` will call `JSON.parse("")` on the 201 response and throw `SyntaxError: Unexpected end of JSON input` on every successful link creation. `JiraClient.request<T>()` (`src/jira/client.ts`) now checks actual body length via `response.text()` instead of the status code, so this is handled — but any new direct-fetch code against this endpoint needs the same guard. To confirm a link was actually created, re-fetch the issue with `?fields=issuelinks` — the create response carries no ID to check.
