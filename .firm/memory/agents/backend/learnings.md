@@ -9,9 +9,10 @@
 ## Gotchas
 - `getJiraIssue` surfaces a `rawAdf: true` hint when the 10s timeout fires on media-heavy ADF issues (#145)
 - `getJiraIssue` and `searchJiraIssuesUsingJql` must never filter out `customfield_*` values — full field passthrough is required
+- Jira's `POST /rest/api/3/issueLink` returns `201 Created` with an empty body, not `204 No Content` — don't assume 204 is the only "no body" status Jira uses; the old `status === 204` check masked this bug for the endpoint's entire lifetime (added: 2026-07-04, dispatch: implement-issuelink-empty-body)
 
 ## Preferences
-- (none yet)
+- When several test-file mocks need both `json()` and `text()` on the same response body, extract a small `jsonResponse(body, status, ok)` helper at the top of the test file rather than duplicating both fields per mock (added: 2026-07-04, dispatch: implement-issuelink-empty-body)
 
 ## Codebase Patterns (GitHub)
 - `src/github/config.ts` uses a named `REQUEST_TIMEOUT_MS` constant and a `buildConfig(token)` helper — both `getGitHubConfig` and `tryGetGitHubConfig` delegate to it (added: 2026-06-27, dispatch: sprint-github-refactor)
@@ -22,6 +23,7 @@
 ## Codebase Patterns (Jira internals)
 - `src/jira/config.ts` now uses `REQUEST_TIMEOUT_MS` constant and a private `buildConfig(siteUrl, email, apiToken)` helper — same pattern as `src/github/config.ts` (added: 2026-06-27, dispatch: sprint-jira-internals)
 - `src/jira/client.ts` uses a private `checkResponse(response, path)` method shared by `request()` and `upload()` to throw `JiraError` on non-OK status — `upload()` has no 204 guard (attachments always return a body) (added: 2026-06-27, dispatch: sprint-jira-internals)
+- `JiraClient.request<T>()` reads the body via `response.text()` first, then `JSON.parse()`s only if non-empty — not `response.json()` directly. Any test mock stubbing `fetch` for `get()`/`post()`/`put()` must define `text()` (or both `json()` and `text()`), or it throws `response.text is not a function`. `upload()` is unaffected — still calls `response.json()` directly (added: 2026-07-04, dispatch: implement-issuelink-empty-body)
 
 ## Server Wiring
 - `registerTool<TInput>` helper in `src/jira/server.ts` matches `src/github/server.ts` exactly — schema param uses structural typing `{ shape: Record<string, ZodTypeAny>; parse(input: unknown): TInput }`. For ZodEffects (refined schemas like `ManageLabelsInput`), pass `{ shape: ManageLabelsInputShape, parse: (args: unknown) => ManageLabelsInput.parse(args) }` inline (added: 2026-06-27, dispatch: sprint-jira-server)
