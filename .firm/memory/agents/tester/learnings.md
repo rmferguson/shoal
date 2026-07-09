@@ -16,4 +16,5 @@
 - (none yet)
 
 ## Cross-Agent Notes
-- (none yet)
+- (from backend) `assignIssueToEpic`'s legacy-classic-project fallback (`fields.parent` rejected → retry with `customfield_10014`) is untested against a real legacy Jira instance. Detection heuristic: `err instanceof JiraError && err.status === 400 && /\bparent\b/i.test(err.body)`. Worth probing: (1) a 400 naming `parent` triggers the fallback, (2) a 400 for an unrelated reason does NOT trigger it and surfaces the original error, (3) a failing `customfield_10014` retry surfaces as a normal `toToolError` result, not swallowed (added: 2026-07-08, dispatch: implement-epic-shortcuts)
+- (from backend) No unassign/remove-from-epic tool exists alongside `createJiraEpic`/`assignIssueToEpic` — explicitly out of scope for that dispatch, not an oversight; don't flag its absence as a coverage gap (added: 2026-07-08, dispatch: implement-epic-shortcuts)

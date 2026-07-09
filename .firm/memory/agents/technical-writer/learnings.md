@@ -13,4 +13,4 @@
 - (none yet)
 
 ## Cross-Agent Notes
-- (none yet)
+- (from backend) `createJiraEpic` (`src/tools/create-epic.ts`) params: `projectKey`, `summary`, `epicName?`, `description?`, `assigneeAccountId?`, `priority?`, `labels?`, `components?`, `customFields?` — no `parent` param (epics have no parent epic). `assignIssueToEpic` (`src/tools/assign-to-epic.ts`) params: `issueKey`, `epicKey` only; response includes `via: "parent" | "customfield_10014"` showing which field was actually used — the tool's main value-add signal, worth documenting (added: 2026-07-08, dispatch: implement-epic-shortcuts)
