@@ -5,6 +5,9 @@
 - Test setup at `src/__tests__/setup.ts`; Jira client tests at `src/__tests__/jira-client.test.ts`
 - GitHub tools have their own test subdirectory: `src/__tests__/tools/`
 
+## Codebase Patterns
+- `vi.spyOn(client, "<method>").mockRejectedValueOnce(new JiraError(msg, status, body))` tests multi-call fallback/retry logic (e.g. `assignIssueToEpic`'s classic-project fallback) with precise per-call control, without fabricating full mock `Response` objects through `fetch` for each sequential call — still uses the real `JiraClient` instance per project convention (added: 2026-07-08, dispatch: implement-epic-shortcuts)
+
 ## Gotchas
 - Shared fetch-capture helpers in Vitest must return a superset mock response covering all fields any caller reads — tools that access nested properties (e.g. `comment.author.displayName`, `user.login`) will throw if `json()` returns `{}` because `toToolError` re-throws unknown errors rather than swallowing them (added: 2026-06-27, dispatch: sprint-test-helpers)
 
