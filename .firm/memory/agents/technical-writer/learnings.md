@@ -5,6 +5,7 @@
 - CHANGELOG follows a release-per-section format; current version is 1.0.0 (not 0.2.0 — stale, corrected 2026-07-08)
 - `docs/` directory exists but is sparse — room to grow
 - `docs/tools.md` is the full parameter-reference doc README links to, separate from topic docs like `docs/jira-epics.md` — check it whenever a new tool ships, every registered tool needs a `## \`toolName\`` section there or README's "full parameter coverage" promise is broken (added: 2026-07-08, dispatch: implement-epic-shortcuts)
+- `docs/tools.md`'s tool-section ordering follows registration order in `src/jira/server.ts`, not alphabetical or file-creation order — check that file when deciding where a new tool's doc section belongs (added: 2026-07-08, dispatch: implement-epic-shortcuts)
 
 ## Gotchas
 - Shoal is positioned as the quality alternative to Atlassian's official MCP server (`mcp.atlassian.com`), which has correctness bugs; docs should emphasize this distinction
