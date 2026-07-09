@@ -198,6 +198,39 @@ Create a directional link between two issues (e.g. "PROJ-1 blocks PROJ-2"). Call
 
 ---
 
+## `createJiraEpic`
+
+Create an epic. Makes exactly one API call — no retry logic that could cause duplicates.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `projectKey` | Yes | Project key, e.g. `PROJ` |
+| `summary` | Yes | Epic summary/title |
+| `epicName` | No | Epic name (classic projects only) — the short label shown on the epic chip, separate from `summary`. Sets `customfield_10011`. Not used by next-gen (team-managed) projects. |
+| `description` | No | Epic description (plain text; wrapped in ADF automatically) |
+| `assigneeAccountId` | No | Atlassian account ID of the assignee |
+| `priority` | No | Priority name, e.g. `High`, `Medium`, `Low` |
+| `labels` | No | Labels to apply |
+| `components` | No | Component names to assign |
+| `customFields` | No | Custom field values keyed by `customfield_XXXXX` |
+
+**Returns:** `key`, `id`, `url`.
+
+---
+
+## `assignIssueToEpic`
+
+Assign an existing issue to an epic. Tries the next-gen `parent` field first; if Jira rejects it (classic projects using the legacy Epic Link model), falls back to `customfield_10014` automatically.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `issueKey` | Yes | Issue key to assign to an epic, e.g. `PROJ-99` |
+| `epicKey` | Yes | Epic issue key to assign the issue under, e.g. `PROJ-42` |
+
+**Returns:** `{ success: true, issueKey, epicKey, via }`, where `via` is `"parent"` or `"customfield_10014"` — it reports which field Jira actually accepted, so you know whether the project uses the next-gen parent-link model or the legacy Epic Link custom field.
+
+---
+
 ## `getJiraProjects`
 
 List accessible Jira projects with pagination.
