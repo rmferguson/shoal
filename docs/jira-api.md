@@ -120,6 +120,17 @@ Jira has two different ways to relate issues:
 
 These are different API calls and different data models. Do not use issue links to model epic relationships.
 
+### Creating an issue with a dependency
+
+`createJiraIssue` has no `dependsOn`, `blockedBy`, or `links` parameter. This is intentional, not an oversight — the tool makes exactly one POST with no chaining (see "One POST, no retries" above), and adding a link parameter would reintroduce the multi-step request pattern that caused the double-create bug in the first place. The schema rejects unknown top-level fields, so there is no undocumented way to pass a link through it either.
+
+Creating an issue with a dependency is always two calls:
+
+1. `createJiraIssue` — create the issue, get back its `key`.
+2. `createJiraIssueLink` — link it to the other issue (e.g. `linkType: "Blocks"`), using the `key` from step 1.
+
+Call `getJiraIssueLinkTypes` first if you don't already know the valid link type names for the instance.
+
 ### Empty body on link creation
 
 `POST /rest/api/3/issueLink` returns **201 Created with an empty response body** — not 204, and not a JSON payload. This is documented Atlassian behavior: "this resource returns nothing on the creation of an issue link." A client that gates empty-body handling on `status === 204` will call `JSON.parse("")` on the 201 response and throw `SyntaxError: Unexpected end of JSON input` on every successful link creation. `JiraClient.request<T>()` (`src/jira/client.ts`) now checks actual body length via `response.text()` instead of the status code, so this is handled — but any new direct-fetch code against this endpoint needs the same guard. To confirm a link was actually created, re-fetch the issue with `?fields=issuelinks` — the create response carries no ID to check.

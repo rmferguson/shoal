@@ -52,6 +52,8 @@ Create an issue. Makes exactly one API call — no retry logic that could cause 
 
 **Returns:** `key`, `id`, `url`.
 
+No parameter models dependencies or issue links — to create an issue that depends on or blocks another, call `createJiraIssueLink` afterward with the returned `key`. See "Creating an issue with a dependency" in `jira-api.md`.
+
 ---
 
 ## `updateJiraIssue`
