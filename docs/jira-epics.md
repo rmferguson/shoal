@@ -31,6 +31,20 @@ createJiraIssue({
 
 **Next-gen projects** do not have a separate epic name field. `summary` is the only title field you need.
 
+### Shortcut: `createJiraEpic`
+
+`createJiraEpic` wraps the same fields shown above into a dedicated tool, so you don't need to remember `issueType: "Epic"` or the `customfield_10011` mapping:
+
+```
+createJiraEpic({
+  projectKey: "PROJ",
+  summary: "Q3 Infrastructure Hardening",
+  epicName: "Infra Q3",         // classic projects only
+})
+```
+
+It takes `projectKey`, `summary`, `epicName?`, `description?`, `assigneeAccountId?`, `priority?`, `labels?`, `components?`, and `customFields?`. There's no `parent` parameter — epics don't have a parent epic. Use `createJiraIssue` directly if you need fields this shortcut doesn't expose.
+
 ---
 
 ## Assigning a child issue to an epic
@@ -51,6 +65,19 @@ updateJiraIssue({
 ```
 
 This works for **next-gen projects** and for **classic projects that use the parent link model** (most classic projects created after ~2021).
+
+### Shortcut: `assignIssueToEpic`
+
+`assignIssueToEpic` takes just `issueKey` and `epicKey` and handles the classic/next-gen distinction for you:
+
+```
+assignIssueToEpic({
+  issueKey: "PROJ-99",
+  epicKey: "PROJ-42",
+})
+```
+
+It tries `parent` first. If Jira rejects that with a 400 mentioning the `parent` field — the legacy classic project case described below — it retries with `customfield_10014` automatically. The response's `via` field (`"parent"` or `"customfield_10014"`) tells you which one actually worked, so you never have to inspect the project's `style` first. Use `updateJiraIssue` directly if you need to set `parent` alongside other fields in the same call.
 
 ---
 

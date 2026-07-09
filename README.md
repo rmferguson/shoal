@@ -17,12 +17,13 @@ A local MCP server for Jira that works correctly. Built as a quality alternative
 | No `editJiraIssueComment` tool | Included |
 | No `manageJiraIssueLabels` tool | Included |
 | No issue link tools | `createJiraIssueLink` + `getJiraIssueLinkTypes` |
+| Epic operations require knowing Jira's internal field model (`customfield_10011`, `customfield_10014`) | `createJiraEpic` + `assignIssueToEpic` |
 
 ## Tools
 
 ### Jira
 
-`getJiraIssue`, `searchJiraIssuesUsingJql`, `createJiraIssue`, `updateJiraIssue`, `getJiraTransitions`, `transitionJiraIssue`, `addCommentToJiraIssue`, `getJiraIssueComments`, `editJiraIssueComment`, `manageJiraIssueLabels`, `addAttachmentToJiraIssue`, `getJiraIssueLinkTypes`, `createJiraIssueLink`, `getJiraProjects`.
+`getJiraIssue`, `searchJiraIssuesUsingJql`, `createJiraIssue`, `updateJiraIssue`, `getJiraTransitions`, `transitionJiraIssue`, `addCommentToJiraIssue`, `getJiraIssueComments`, `editJiraIssueComment`, `manageJiraIssueLabels`, `addAttachmentToJiraIssue`, `getJiraIssueLinkTypes`, `createJiraIssueLink`, `getJiraProjects`, `createJiraEpic`, `assignIssueToEpic`.
 
 Full parameter reference: [docs/tools.md](docs/tools.md)
 

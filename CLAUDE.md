@@ -55,6 +55,8 @@ src/
     manage-labels.ts     # manageJiraIssueLabels
     add-attachment.ts    # addAttachmentToJiraIssue
     get-comments.ts      # getJiraIssueComments
+    create-epic.ts        # createJiraEpic
+    assign-to-epic.ts     # assignIssueToEpic
 ```
 
 ---

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added — Jira tools
+
+- `createJiraEpic` — shortcut for creating an epic without needing to know `issueType: "Epic"` or the `customfield_10011` epic-name mapping
+- `assignIssueToEpic` — shortcut for assigning an issue to an epic; tries the `parent` field and falls back to `customfield_10014` for legacy classic projects automatically
+
 ## [1.0.0] - 2026-07-02
 
 ### Added — Jira tools
