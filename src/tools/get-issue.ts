@@ -19,6 +19,41 @@ interface JiraIssueResponse {
   fields: Record<string, unknown>;
 }
 
+interface RawIssueLink {
+  type?: { name?: string; inward?: string; outward?: string };
+  inwardIssue?: { key?: string; fields?: { summary?: string } };
+  outwardIssue?: { key?: string; fields?: { summary?: string } };
+}
+
+interface IssueLinkSummary {
+  type: string | undefined;
+  direction: string | undefined;
+  issueKey: string | undefined;
+  summary: string | undefined;
+}
+
+/**
+ * Shape raw `issuelinks` entries into a readable summary: the link type's
+ * direction-appropriate label (inward/outward) plus the linked issue's key
+ * and summary. Each entry has either an inwardIssue or an outwardIssue, never
+ * both.
+ */
+function extractIssueLinks(fields: Record<string, unknown>): IssueLinkSummary[] {
+  const rawLinks = fields["issuelinks"] as RawIssueLink[] | undefined;
+  if (!Array.isArray(rawLinks)) return [];
+
+  return rawLinks.map((link) => {
+    const linkedIssue = link.inwardIssue ?? link.outwardIssue;
+    const direction = link.inwardIssue ? link.type?.inward : link.type?.outward;
+    return {
+      type: link.type?.name,
+      direction,
+      issueKey: linkedIssue?.key,
+      summary: linkedIssue?.fields?.summary,
+    };
+  });
+}
+
 export async function getJiraIssue(input: GetIssueInput, client: JiraClient): Promise<unknown> {
   const { issueKey, rawAdf = false } = input;
 
@@ -41,6 +76,7 @@ export async function getJiraIssue(input: GetIssueInput, client: JiraClient): Pr
   const labels = fields["labels"] as string[] | undefined;
   const description = fields["description"];
   const descriptionText = rawAdf ? description : renderAdf(description);
+  const issueLinks = extractIssueLinks(fields);
 
   return {
     key: issue.key,
@@ -53,5 +89,6 @@ export async function getJiraIssue(input: GetIssueInput, client: JiraClient): Pr
     labels: labels ?? [],
     description: descriptionText,
     customFields,
+    issueLinks,
   };
 }

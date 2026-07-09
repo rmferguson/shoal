@@ -73,4 +73,60 @@ describe("getJiraIssue", () => {
     expect(result.error).toBeDefined();
     expect(result.status).toBe(404);
   });
+
+  it("returns an empty issueLinks array when the issue has no links", async () => {
+    stubFetch(makeIssue());
+    const result = await getJiraIssue({ issueKey: "TEST-1" }, client) as Record<string, unknown>;
+    expect(result.issueLinks).toEqual([]);
+  });
+
+  it("shapes an outward link using the type's outward label", async () => {
+    stubFetch(makeIssue({
+      issuelinks: [
+        {
+          type: { name: "Blocks", inward: "is blocked by", outward: "blocks" },
+          outwardIssue: { key: "TEST-2", fields: { summary: "Downstream task" } },
+        },
+      ],
+    }));
+    const result = await getJiraIssue({ issueKey: "TEST-1" }, client) as Record<string, unknown>;
+    expect(result.issueLinks).toEqual([
+      { type: "Blocks", direction: "blocks", issueKey: "TEST-2", summary: "Downstream task" },
+    ]);
+  });
+
+  it("shapes an inward link using the type's inward label", async () => {
+    stubFetch(makeIssue({
+      issuelinks: [
+        {
+          type: { name: "Blocks", inward: "is blocked by", outward: "blocks" },
+          inwardIssue: { key: "TEST-3", fields: { summary: "Upstream task" } },
+        },
+      ],
+    }));
+    const result = await getJiraIssue({ issueKey: "TEST-1" }, client) as Record<string, unknown>;
+    expect(result.issueLinks).toEqual([
+      { type: "Blocks", direction: "is blocked by", issueKey: "TEST-3", summary: "Upstream task" },
+    ]);
+  });
+
+  it("shapes multiple links, preserving order", async () => {
+    stubFetch(makeIssue({
+      issuelinks: [
+        {
+          type: { name: "Blocks", inward: "is blocked by", outward: "blocks" },
+          outwardIssue: { key: "TEST-2", fields: { summary: "Downstream task" } },
+        },
+        {
+          type: { name: "Relates", inward: "relates to", outward: "relates to" },
+          inwardIssue: { key: "TEST-4", fields: { summary: "Related task" } },
+        },
+      ],
+    }));
+    const result = await getJiraIssue({ issueKey: "TEST-1" }, client) as Record<string, unknown>;
+    expect(result.issueLinks).toEqual([
+      { type: "Blocks", direction: "blocks", issueKey: "TEST-2", summary: "Downstream task" },
+      { type: "Relates", direction: "relates to", issueKey: "TEST-4", summary: "Related task" },
+    ]);
+  });
 });
