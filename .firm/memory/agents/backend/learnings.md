@@ -1,6 +1,7 @@
 # Learnings: backend
 
 ## Codebase Patterns
+- `getJiraIssue`'s standard-field extraction is split across two places by design: `extractIssueFields` (shared with `searchJiraIssuesUsingJql`) for summary/status/assignee/priority/issuetype/customfields, and fields read directly in `get-issue.ts` for issue-specific concerns (`reporter`, `labels`, `description`, now `issuelinks`) that only `getJiraIssue` exposes. When adding a new passthrough field, check whether `searchJiraIssuesUsingJql` should get it too before deciding which file it belongs in (added: 2026-07-09, dispatch: implement-issuelinks-passthrough)
 - A "shortcut tool" pattern now exists alongside base CRUD tools — `createJiraEpic`/`assignIssueToEpic` (added 2026-07-08) are thin, self-contained wrappers around the same `/issue` endpoints `createJiraIssue`/`updateJiraIssue` use, built because agents kept guessing a dedicated epic tool existed. For future "shortcut for a common but non-obvious param combo" requests: own `JiraClient` calls directly, don't delegate to the general tool (added: 2026-07-08, dispatch: implement-epic-shortcuts)
 - Jira tools live in `src/tools/*.ts`; GitHub tools live in `src/tools/github/*.ts`
 - JiraClient in `src/jira/client.ts` uses Basic Auth via env vars and a 10s AbortSignal timeout on all requests
@@ -8,6 +9,7 @@
 - Components are serialized as `[{ name: "..." }]` objects, not plain strings (#95)
 
 ## Gotchas
+- Jira's `issuelinks` entries carry either `inwardIssue` or `outwardIssue`, never both — the direction label (`type.inward` vs `type.outward`) must be picked based on which key is present, not read unconditionally from one side (added: 2026-07-09, dispatch: implement-issuelinks-passthrough)
 - `getJiraIssue` surfaces a `rawAdf: true` hint when the 10s timeout fires on media-heavy ADF issues (#145)
 - `getJiraIssue` and `searchJiraIssuesUsingJql` must never filter out `customfield_*` values — full field passthrough is required
 - Jira's `POST /rest/api/3/issueLink` returns `201 Created` with an empty body, not `204 No Content` — don't assume 204 is the only "no body" status Jira uses; the old `status === 204` check masked this bug for the endpoint's entire lifetime (added: 2026-07-04, dispatch: implement-issuelink-empty-body)
@@ -43,5 +45,6 @@
 - GitHub Zod schemas use camelCase param names (`issueNumber`, `perPage`) matching Jira conventions; `URLSearchParams` keys remain snake_case (`per_page`, `issue_number`) to satisfy the GitHub REST API (added: 2026-06-27, dispatch: sprint-github-coupling)
 
 ## Cross-Agent Notes
+- (from technical-writer) CLAUDE.md's project layout list under `src/tools/` does not include `create-issue-link.ts` or `get-issue-link-types.ts` (both exist and are registered in `src/jira/server.ts`, both documented in `docs/tools.md`) — stale list, worth a sync next time that file is touched (added: 2026-07-09, dispatch: implement-jira-dependency-docs)
 - `createJiraEpic` (`src/tools/create-epic.ts`) params: `projectKey`, `summary`, `epicName?`, `description?`, `assigneeAccountId?`, `priority?`, `labels?`, `components?`, `customFields?` — no `parent` param (epics have no parent epic). `assignIssueToEpic` (`src/tools/assign-to-epic.ts`) params: `issueKey`, `epicKey` only; response includes `via: "parent" | "customfield_10014"` showing which field was actually used — the tool's main value-add signal (added: 2026-07-08, dispatch: implement-epic-shortcuts, for_agent: technical-writer)
 - No unassign/remove-from-epic tool was added alongside `createJiraEpic`/`assignIssueToEpic` — explicitly out of scope for that dispatch, not an oversight (added: 2026-07-08, dispatch: implement-epic-shortcuts, for_agent: tester)
