@@ -15,6 +15,8 @@ import { addAttachmentToJiraIssue, AddAttachmentInput } from "../tools/add-attac
 import { getJiraIssueComments, GetCommentsInput } from "../tools/get-comments.js";
 import { createJiraIssueLink, CreateIssueLinkInput } from "../tools/create-issue-link.js";
 import { getJiraIssueLinkTypes, GetIssueLinkTypesInput } from "../tools/get-issue-link-types.js";
+import { createJiraEpic, CreateEpicInput } from "../tools/create-epic.js";
+import { assignIssueToEpic, AssignToEpicInput } from "../tools/assign-to-epic.js";
 
 function registerTool<TInput>(
   server: McpServer,
@@ -160,5 +162,27 @@ export function registerJiraTools(server: McpServer): void {
       "The inward/outward distinction follows the link type's directional labels.",
     CreateIssueLinkInput,
     (input) => createJiraIssueLink(input, client)
+  );
+
+  registerTool(
+    server,
+    "createJiraEpic",
+    "Create a Jira epic directly — this is the discoverable shortcut for epic creation, " +
+      "equivalent to createJiraIssue with issueType: 'Epic' but locked to the correct issue type. " +
+      "Pass epicName for classic projects (sets the epic chip label, customfield_10011); " +
+      "next-gen projects don't need it.",
+    CreateEpicInput,
+    (input) => createJiraEpic(input, client)
+  );
+
+  registerTool(
+    server,
+    "assignIssueToEpic",
+    "Assign an existing issue to an epic — the discoverable shortcut for setting an issue's parent epic. " +
+      "Tries the modern parent field first (next-gen and modern classic projects); if the instance rejects " +
+      "it, automatically falls back to the legacy Epic Link field (customfield_10014) used by older classic " +
+      "projects, so callers don't need to know which model their project uses.",
+    AssignToEpicInput,
+    (input) => assignIssueToEpic(input, client)
   );
 }
