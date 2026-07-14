@@ -4,6 +4,7 @@ import { JiraClient } from "./client.js";
 import { getJiraIssue, GetIssueInput } from "../tools/get-issue.js";
 import { searchJiraIssuesUsingJql, SearchIssuesInput } from "../tools/search-issues.js";
 import { createJiraIssue, CreateIssueInput } from "../tools/create-issue.js";
+import { getJiraIssueTypes, GetIssueTypesInput } from "../tools/get-issue-types.js";
 import { getJiraTransitions, GetTransitionsInput } from "../tools/get-transitions.js";
 import { addCommentToJiraIssue, AddCommentInput } from "../tools/add-comment.js";
 import { getJiraProjects, GetProjectsInput } from "../tools/get-projects.js";
@@ -54,10 +55,22 @@ export function registerJiraTools(server: McpServer): void {
 
   registerTool(
     server,
+    "getJiraIssueTypes",
+    "List the issue types available in a Jira project, including which ones are subtasks. " +
+      "Call this before createJiraIssue when nesting an issue under a non-Epic parent (e.g. a " +
+      "Task or Story) — the correct subtask type name varies by project ('Subtask', 'Sub-task', " +
+      "or a custom name) and cannot be guessed reliably.",
+    GetIssueTypesInput,
+    (input) => getJiraIssueTypes(input, client)
+  );
+
+  registerTool(
+    server,
     "createJiraIssue",
     "Create a Jira issue. Creates exactly one issue (no duplicates). " +
       "Specify components as names — they are serialized correctly. " +
-      "Custom fields can be passed via customFields: { customfield_10016: 5 }.",
+      "Custom fields can be passed via customFields: { customfield_10016: 5 }. " +
+      "Call getJiraIssueTypes first if unsure of this project's exact issue type names.",
     CreateIssueInput,
     (input) => createJiraIssue(input, client)
   );

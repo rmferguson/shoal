@@ -2,6 +2,7 @@ import { z } from "zod";
 import { JiraClient } from "../jira/client.js";
 import { plainTextToAdf } from "./adf-utils.js";
 import { toToolError } from "../jira/errors.js";
+import { hintForIssueError } from "./issue-type-hints.js";
 
 export const UpdateIssueInput = z.object({
   issueKey: z.string().describe("Jira issue key, e.g. PROJ-123"),
@@ -55,6 +56,9 @@ export async function updateJiraIssue(input: UpdateIssueInput, client: JiraClien
     );
     return { success: true, issueKey: issueKey.trim() };
   } catch (err) {
-    return toToolError(err, `Request timed out updating issue ${issueKey}.`);
+    const base = toToolError(err, `Request timed out updating issue ${issueKey}.`) as Record<string, unknown>;
+    const projectKey = issueKey.trim().toUpperCase().split("-")[0];
+    const hint = hintForIssueError(err, { projectKey, parent });
+    return hint ? { ...base, hint } : base;
   }
 }
