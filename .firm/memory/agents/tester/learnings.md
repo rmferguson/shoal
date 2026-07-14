@@ -7,6 +7,8 @@
 
 ## Codebase Patterns
 - `vi.spyOn(client, "<method>").mockRejectedValueOnce(new JiraError(msg, status, body))` tests multi-call fallback/retry logic (e.g. `assignIssueToEpic`'s classic-project fallback) with precise per-call control, without fabricating full mock `Response` objects through `fetch` for each sequential call — still uses the real `JiraClient` instance per project convention (added: 2026-07-08, dispatch: implement-epic-shortcuts)
+- Error-path tests for tools using `client.get`/`post`/`put` (not `upload`) stub `ok: false` on the shared `vi.stubGlobal("fetch", ...)` mock rather than spying on the client method directly — exercises the real `JiraClient.checkResponse` → `JiraError` construction path end-to-end (added: 2026-07-14, dispatch: implement-subtask-type-hints)
+- When a test description says "confirms X while Y still holds," write two separate `it` blocks, not one with two assertions — a combined assertion gives an ambiguous failure signal when only one branch regresses (added: 2026-07-14, dispatch: implement-subtask-type-hints)
 
 ## Gotchas
 - Shared fetch-capture helpers in Vitest must return a superset mock response covering all fields any caller reads — tools that access nested properties (e.g. `comment.author.displayName`, `user.login`) will throw if `json()` returns `{}` because `toToolError` re-throws unknown errors rather than swallowing them (added: 2026-06-27, dispatch: sprint-test-helpers)
@@ -14,6 +16,7 @@
 ## Gotchas (Zod / TypeScript)
 - `z.string().optional().default('...')` produces a required field in `z.infer<>` (the output type). Calling tool functions directly in tests without the defaulted field causes `tsc` errors even though Vitest passes at runtime. Fix: use `SchemaInput.parse({...})` to apply defaults before calling the function (added: 2026-06-27, dispatch: sprint-test-coverage)
 - `addAttachmentToJiraIssue` uses `client.upload()` which sends `FormData` — `captureBody()` from `helpers.ts` does not work here because it calls `JSON.parse(init.body)`. Use `vi.stubGlobal('fetch', ...)` directly and assert `init.body instanceof FormData` instead (added: 2026-06-27, dispatch: sprint-test-coverage)
+- Trying to temporarily mutate `src/tools/*.ts` (e.g. via `sed`) to prove a new test fails against unfixed code is blocked by the sandbox's auto-mode classifier when the dispatch scopes a tester to test-files-only — it's treated as irreversible local destruction regardless of intent to revert. When scope excludes production files, verify wiring by reading the source carefully instead (added: 2026-07-14, dispatch: implement-subtask-type-hints)
 
 ## Preferences
 - (none yet)
