@@ -52,6 +52,22 @@ Sending `["Backend", "Auth"]` returns a 400 with "Please provide Component" (#95
 
 ---
 
+## Issue types
+
+`issueType` is unvalidated free text — Shoal sends whatever string you pass straight through as `issuetype: { name }`. There is no fixed list, and the naming isn't even consistent across projects: the subtask type is called `Subtask` on some projects, `Sub-task` on others, or a custom name entirely, and it can't be guessed from the project's `style` field. Guessing wrong on a next-gen project produces two different rejections depending on what's wrong:
+
+```json
+{ "parent": "Please select valid parent issue." }
+```
+
+```json
+{ "issuetype": "Specify a valid issue type" }
+```
+
+Call `getJiraIssueTypes` first to get the project's real issue type names, each flagged `subtask: true/false`. It hits `GET /issue/createmeta/{projectKey}/issuetypes` — not the bulk `GET /issue/createmeta?projectKeys=...&expand=projects.issuetypes` endpoint, which Atlassian deprecated in December 2023, and not `GET /issuetype/project?projectId=`, which only accepts a numeric project ID and would force an extra key-to-id lookup every other Shoal tool avoids.
+
+---
+
 ## Transitions
 
 ### Getting valid transition IDs
