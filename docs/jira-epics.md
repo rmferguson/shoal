@@ -112,3 +112,5 @@ How to tell which model your classic project uses: try setting `parent` first. I
 ## Epic hierarchy in next-gen projects
 
 Next-gen projects support deeper nesting than classic: Epic → Story → Sub-task, or even deeper in some configurations. The `parent` field is used at every level. Classic projects have a fixed three-level hierarchy: Epic → Issue → Sub-task.
+
+The subtask type name at each nesting level varies per project — don't assume `"Subtask"` or `"Sub-task"`; call `getJiraIssueTypes` to look it up.
