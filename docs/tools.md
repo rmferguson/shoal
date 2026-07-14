@@ -32,6 +32,18 @@ Search issues using JQL with cursor-based pagination.
 
 ---
 
+## `getJiraIssueTypes`
+
+List the issue types available in a Jira project, flagged by whether each one is a subtask type. Call this before `createJiraIssue` when nesting an issue under a non-Epic parent — the correct subtask type name (`Subtask`, `Sub-task`, or a custom name) varies per project and can't be guessed.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `projectKey` | Yes | Project key to look up issue types for, e.g. `PROJ` |
+
+**Returns:** `projectKey`, `issueTypes[]` — each with `id`, `name`, `subtask` (`true` for subtask-type issue types).
+
+---
+
 ## `createJiraIssue`
 
 Create an issue. Makes exactly one API call — no retry logic that could cause duplicates.
@@ -40,7 +52,7 @@ Create an issue. Makes exactly one API call — no retry logic that could cause 
 |-----------|----------|-------------|
 | `projectKey` | Yes | Project key, e.g. `PROJ` |
 | `summary` | Yes | Issue title |
-| `issueType` | No | Issue type name (default: `Task`). Pass `Epic` to create an epic. |
+| `issueType` | No | Issue type name (default: `Task`). Pass `Epic` to create an epic. Names are project-specific — call `getJiraIssueTypes` first if unsure, especially for subtask type names. |
 | `description` | No | Plain text description — wrapped in ADF automatically |
 | `assigneeAccountId` | No | Atlassian account ID of the assignee |
 | `priority` | No | Priority name, e.g. `High`, `Medium`, `Low` |
@@ -53,6 +65,8 @@ Create an issue. Makes exactly one API call — no retry logic that could cause 
 **Returns:** `key`, `id`, `url`.
 
 No parameter models dependencies or issue links — to create an issue that depends on or blocks another, call `createJiraIssueLink` afterward with the returned `key`. See "Creating an issue with a dependency" in `jira-api.md`.
+
+On a 400 rejecting `issueType` or `parent`, the error response (`error`, `status`, `body`) includes an additional `hint` field naming the exact `getJiraIssueTypes` call to make next.
 
 ---
 
@@ -73,6 +87,8 @@ Update fields on an existing issue. Only the fields you provide are changed — 
 | `customFields` | No | Custom field values, e.g. `{ "customfield_10016": 8 }` |
 
 **Returns:** `{ success: true, issueKey }`.
+
+On a 400 rejecting `parent`, the error response includes an additional `hint` field naming the exact `getJiraIssueTypes` call to make next.
 
 ---
 
