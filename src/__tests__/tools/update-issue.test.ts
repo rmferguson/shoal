@@ -7,6 +7,15 @@ const client = new JiraClient();
 
 beforeEach(() => vi.restoreAllMocks());
 
+function stubUpdateError(body: unknown, status = 400) {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: false,
+    status,
+    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(JSON.stringify(body)),
+  }));
+}
+
 describe("updateJiraIssue", () => {
   it("sends only the defined fields", async () => {
     const bodyPromise = captureBody();
@@ -105,5 +114,49 @@ describe("updateJiraIssue", () => {
     const body = await bodyPromise;
     const fields = body.fields as Record<string, unknown>;
     expect(fields.labels).toEqual(["bug", "critical"]);
+  });
+});
+
+describe("updateJiraIssue - issue-type hints (#2)", () => {
+  it("adds a hint mentioning customfield_10014 and getJiraIssueTypes on a parent-rejection 400, with projectKey derived from the issue key prefix", async () => {
+    stubUpdateError({ errors: { parent: "field 'parent' cannot be set" } });
+
+    const result = (await updateJiraIssue(
+      { issueKey: "PROJ-123", parent: "EPIC-1" },
+      client
+    )) as Record<string, unknown>;
+
+    expect(result.hint).toBeDefined();
+    expect(result.hint as string).toContain("customfield_10014");
+    expect(result.hint as string).toContain("getJiraIssueTypes");
+    expect(result.hint as string).toContain("PROJ");
+    expect(result.hint as string).not.toContain("PROJ-123");
+  });
+
+  it("does not add a hint on an unrelated 400", async () => {
+    const errorBody = { errorMessages: ["Field 'summary' is required."] };
+    stubUpdateError(errorBody);
+
+    const result = (await updateJiraIssue(
+      { issueKey: "TEST-1", summary: "New summary" },
+      client
+    )) as Record<string, unknown>;
+
+    expect(result.hint).toBeUndefined();
+    expect(result.status).toBe(400);
+  });
+
+  it("does not add a hint on a timeout (AbortError)", async () => {
+    const err = new Error("aborted");
+    err.name = "AbortError";
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(err));
+
+    const result = (await updateJiraIssue(
+      { issueKey: "TEST-1", parent: "EPIC-1" },
+      client
+    )) as Record<string, unknown>;
+
+    expect(result.hint).toBeUndefined();
+    expect(result.error).toMatch(/timed out/);
   });
 });
