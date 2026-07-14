@@ -46,6 +46,7 @@ src/
     get-issue.ts     # getJiraIssue
     search-issues.ts # searchJiraIssuesUsingJql
     create-issue.ts  # createJiraIssue
+    get-issue-types.ts    # getJiraIssueTypes
     get-transitions.ts   # getJiraTransitions
     add-comment.ts       # addCommentToJiraIssue
     get-projects.ts      # getJiraProjects
@@ -55,6 +56,8 @@ src/
     manage-labels.ts     # manageJiraIssueLabels
     add-attachment.ts    # addAttachmentToJiraIssue
     get-comments.ts      # getJiraIssueComments
+    create-issue-link.ts     # createJiraIssueLink
+    get-issue-link-types.ts  # getJiraIssueLinkTypes
     create-epic.ts        # createJiraEpic
     assign-to-epic.ts     # assignIssueToEpic
 ```
@@ -72,6 +75,8 @@ src/
 **Component serialization** — components are serialized as `[{ name: "..." }]` objects, not plain strings. This is the fix for #95. Do not simplify to plain strings.
 
 **ADF for comments/descriptions** — when writing to Jira (comments, descriptions), always wrap plain text in ADF (`doc > paragraph > text`). Plain string bodies are rejected or cause @mentions to be stripped (#136).
+
+**Issue type names are project-specific (subtask footgun)** — `issueType` on `createJiraIssue` is a free-form string; Jira does not validate it client-side, and the name for "nest this under a non-Epic issue" is not fixed — it varies per project (`Subtask`, `Sub-task`, or a custom name) independent of the project's `style` (next-gen/classic). Guessing wrong fails with a 400 mentioning `issuetype` or `parent`. `getJiraIssueTypes` (`GET /issue/createmeta/{projectKey}/issuetypes`) discovers the exact name, including a `subtask: true` flag; `createJiraIssue`'s and `updateJiraIssue`'s catch blocks add a `hint` field pointing to it on either rejection. Do not auto-resolve or silently override a caller-supplied `issueType`/`parent` combination — next-gen projects legitimately nest Story/Task/Bug directly under an Epic via `parent` without being a subtask, so "parent is set" never implies "issueType must be a subtask type." This stays reactive (discovery + error-enrichment), matching `assignIssueToEpic`'s fallback pattern — not silent inference.
 
 ---
 
