@@ -23,7 +23,7 @@ A local MCP server for Jira that works correctly. Built as a quality alternative
 
 ### Jira
 
-`getJiraIssue`, `searchJiraIssuesUsingJql`, `createJiraIssue`, `updateJiraIssue`, `getJiraTransitions`, `transitionJiraIssue`, `addCommentToJiraIssue`, `getJiraIssueComments`, `editJiraIssueComment`, `manageJiraIssueLabels`, `addAttachmentToJiraIssue`, `getJiraIssueLinkTypes`, `createJiraIssueLink`, `getJiraProjects`, `createJiraEpic`, `assignIssueToEpic`.
+`getJiraIssue`, `searchJiraIssuesUsingJql`, `getJiraIssueTypes`, `createJiraIssue`, `updateJiraIssue`, `getJiraTransitions`, `transitionJiraIssue`, `addCommentToJiraIssue`, `getJiraIssueComments`, `editJiraIssueComment`, `manageJiraIssueLabels`, `addAttachmentToJiraIssue`, `getJiraIssueLinkTypes`, `createJiraIssueLink`, `getJiraProjects`, `createJiraEpic`, `assignIssueToEpic`.
 
 Full parameter reference: [docs/tools.md](docs/tools.md)
 
