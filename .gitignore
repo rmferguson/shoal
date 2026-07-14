@@ -17,6 +17,7 @@ shoal-jira-spec.md
 # Firm plugin — ephemeral session state
 .claude/rules/
 .claude/worktrees/
+.claude/agents/
 
 # Firm — ephemeral runtime state
 .firm/scratch/
